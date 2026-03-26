@@ -1,0 +1,8 @@
+[
+{
+  "directory": "E:/vulkan/build",
+  "command": "E:\\mingw64\\bin\\c++.exe  @CMakeFiles/vulkan.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\vulkan.dir\\main.cpp.obj -c E:\\vulkan\\main.cpp",
+  "file": "E:/vulkan/main.cpp",
+  "output": "CMakeFiles/vulkan.dir/main.cpp.obj"
+}
+]
