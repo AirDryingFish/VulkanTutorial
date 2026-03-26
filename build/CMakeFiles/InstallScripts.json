@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"E:/vulkan/build/cmake_install.cmake"
+		"H:/VulkanTutorial/build/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

@@ -1,0 +1,13 @@
+{
+    "cmake.configureOnOpen": true,
+    "cmake.generator": "Ninja",
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "H:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "glfw3_DIR": "H:/vcpkg/installed/x64-windows/share/glfw3",
+        "glm_DIR": "H:/vcpkg/installed/x64-windows/share/glm",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+}
