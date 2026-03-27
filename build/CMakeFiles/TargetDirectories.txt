@@ -1,3 +1,0 @@
-H:/VulkanTutorial/build/CMakeFiles/vulkan.dir
-H:/VulkanTutorial/build/CMakeFiles/edit_cache.dir
-H:/VulkanTutorial/build/CMakeFiles/rebuild_cache.dir

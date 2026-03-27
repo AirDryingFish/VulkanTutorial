@@ -1,8 +1,0 @@
-[
-{
-  "directory": "H:/VulkanTutorial/build",
-  "command": "C:\\PROGRA~1\\MIB055~1\\18\\COMMUN~1\\VC\\Tools\\MSVC\\1450~1.357\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -DGLFW_DLL -external:IC:\\VulkanSDK\\1.4.341.1\\include -external:IH:\\vcpkg\\installed\\x64-windows\\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++17 -MDd /FoCMakeFiles\\vulkan.dir\\main.cpp.obj /FdCMakeFiles\\vulkan.dir\\ /FS -c H:\\VulkanTutorial\\main.cpp",
-  "file": "H:/VulkanTutorial/main.cpp",
-  "output": "H:/VulkanTutorial/build/CMakeFiles/vulkan.dir/main.cpp.obj"
-}
-]
