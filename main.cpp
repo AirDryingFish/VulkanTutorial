@@ -18,6 +18,7 @@
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
+const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
@@ -94,7 +95,7 @@ struct SwapChainSupportDetails
     std::vector<VkPresentModeKHR> presentModes;
 };
 
-class HelloTriangleApplication
+class TriangleApplication
 {
 public:
     void run()
@@ -111,9 +112,12 @@ private:
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        // GLFW_TRUE：代表可以调整窗口大小
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
         window = glfwCreateWindow(800, 600, "Vulkan", nullptr, nullptr);
+        glfwSetWindowUserPointer(window, this);
+        glfwSetFramebufferSizeCallback(window, framebufferRizeCallback);
     }
     void InitVulkan()
     {
@@ -126,6 +130,10 @@ private:
         createImageViews();
         createRenderPass();
         createGraphicsPipeline();
+        createFramebuffers();
+        createCommandPool();
+        createCommandBuffers();
+        createSyncObjects();
     }
 
     void createSurface()
@@ -183,6 +191,7 @@ private:
 
         // Step 6: 获取队列句柄：调用 vkGetDeviceQueue 获取图形队列的句柄，并存储在 graphicsQueue 变量中，以便后续使用。
         vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+        vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
     }
 
     void pickPhysicalDevice()
@@ -350,7 +359,7 @@ private:
             imageCount = swapChainSupport.capabilities.maxImageCount;
         }
 
-        // 具体进行swap chain的创建
+        // 具体进行swap chain的创建(创建swap chain的图像)
         VkSwapchainCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createInfo.surface = surface;
@@ -403,6 +412,44 @@ private:
 
         swapChainImageFormat = surfaceFormat.format;
         swapChainExtent = extent;
+    }
+
+    void recreateSwapChain()
+    {
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(window, &width, &height);
+        while (width == 0 || height == 0)
+        {
+            glfwGetFramebufferSize(window, &width, &height);
+            glfwWaitEvents();
+        }
+
+        vkDeviceWaitIdle(device);
+
+        cleanupSwapChain();
+        createSwapChain();
+        createImageViews();
+        createFramebuffers();
+    }
+
+    static void framebufferRizeCallback(GLFWwindow *window, int width, int height)
+    {
+        auto app = reinterpret_cast<TriangleApplication *>(glfwGetWindowUserPointer(window));
+        app->framebufferResized = true;
+    }
+
+    void cleanupSwapChain()
+    {
+        for (auto framebuffer : swapChainFramebuffers)
+        {
+            vkDestroyFramebuffer(device, framebuffer, nullptr);
+        }
+
+        for (auto imageView : swapChainImageViews)
+        {
+            vkDestroyImageView(device, imageView, nullptr);
+        }
+        vkDestroySwapchainKHR(device, swapChain, nullptr);
     }
 
     void createImageViews()
@@ -556,6 +603,22 @@ private:
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
 
+        // Render pass开始时会做布局转换(比如把图像从“未定义”转成“可以写颜色”的布局)
+        // vulkan默认在管线最开头做这个转换，但是那时候图像可能还没从swap chain中那到。往一个没准备好的图像上做布局转换，会出问题
+        // 解决思路：告诉vulkan，布局转换等到真正要写颜色的阶段再做
+        VkSubpassDependency dependency{};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL; // 外部，renderpass之间的操作
+        dependency.dstSubpass = 0;                   // 我们的子通道
+
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
+
         if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create render pass!");
@@ -605,8 +668,8 @@ private:
 
     void createGraphicsPipeline()
     {
-        auto vertShaderCode = readFile("shaders/vert.spv");
-        auto fragShaderCode = readFile("shaders/frag.spv");
+        auto vertShaderCode = readFile("../shaders/vert.spv");
+        auto fragShaderCode = readFile("../shaders/frag.spv");
 
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -685,7 +748,7 @@ private:
 
         // Rasterizer 光栅化器
         VkPipelineRasterizationStateCreateInfo rasterizerInfo{};
-        rasterizerInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_LINE_STATE_CREATE_INFO;
+        rasterizerInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         // 如果启用，光栅化器会把超出近平面和远平面的片段夹紧到近平面和远平面上，而不是丢弃它们。（clamp depth values）
         // 这样可以避免一些图形失真(阴影贴图有用)，但可能会导致性能下降。对于大多数应用来说，直接丢弃这些片段更简单高效，所以设置为VK_FALSE。
         rasterizerInfo.depthClampEnable = VK_FALSE;
@@ -767,29 +830,303 @@ private:
             throw std::runtime_error("failed to create pipeline layout!");
         }
 
+        // 最终的管线的创建
+        VkGraphicsPipelineCreateInfo pipelineInfo{};
+        pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        // 两个着色阶段：顶点着色器和片段着色器
+        pipelineInfo.stageCount = 2;
+        pipelineInfo.pStages = shaderStages;
+        pipelineInfo.pVertexInputState = &vertexInputInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
+        pipelineInfo.pViewportState = &viewportStateInfo;
+        pipelineInfo.pRasterizationState = &rasterizerInfo;
+        pipelineInfo.pMultisampleState = &multisamplingInfo;
+        pipelineInfo.pDepthStencilState = nullptr; // Optional
+        pipelineInfo.pColorBlendState = &colorBlendingInfo;
+        pipelineInfo.pDynamicState = &dynamicStatesInfo; // Optional
+
+        pipelineInfo.layout = pipelineLayout;
+        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.subpass = 0; // 指定这个管线将在哪个subpass里使用。当前只有一个subpass，所以直接设置为0
+
+        // 如果要创建的新管线和某个已有管线大部分配置都相同，Vulkan允许从已有管线派生新管线，驱动可能会因此优化创建速度和运行时切换开销
+        // * basePipelineHandle: 传入一个已经创建好的管线对象的handle，表示“要基于这条管线派生”
+        // * basePipelineIndex: 当一次性批量创建多条管线时(vkCreateGraphicsPipelines支持传入数组)，可以用数组下标引用同批次中的另一条管线作为父管线
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // No other pipelines to derive from
+        pipelineInfo.basePipelineIndex = -1;
+
+        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create graphics pipeline!");
+        }
+
         // ------------------------------------------------------------------------------
         // 清理阶段，销毁着色器模块
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
     }
+
+    void createFramebuffers()
+    {
+        // 1 个swap chain图像对应1个framebuffer，所以framebuffer的数量和swap chain图像的数量一样多
+        swapChainFramebuffers.resize(swapChainImageViews.size());
+        // 遍历 ImageView，给每个ImageView创建一个对应的framebuffer
+        for (size_t i = 0; i < swapChainImageViews.size(); i++)
+        {
+            VkImageView attachments[] = {
+                swapChainImageViews[i]};
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass; // framebuffer要兼容哪个render pass
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = attachments;      // framebuffer要绑定哪些图像作为附件
+            framebufferInfo.width = swapChainExtent.width;   // framebuffer的宽高必须和render pass里定义的视口大小一致
+            framebufferInfo.height = swapChainExtent.height; // framebuffer的宽高必须和render pass里定义的视口大小一致
+            framebufferInfo.layers = 1;                      // 只有一层
+
+            if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
+            {
+                throw std::runtime_error("failed to create framebuffer!");
+            }
+        }
+    }
+
+    void createCommandPool()
+    {
+        QueueFamilyIndices QueueFamilyIndices = findQueueFamilies(physicalDevice);
+
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        // 命令池有两种可能的flag:
+        // * VK_COMMAND_POOL_CREATE_TRANSIENT_BIT: 命令缓冲区是短命的，可能会频繁重置和录制。驱动可以为这种命令缓冲区优化内存分配。
+        // * VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT: 允许单独重置命令池中的每个命令缓冲区，而不是必须重置整个命令池。这对于需要频繁重置命令缓冲区的应用程序很有用。如果没有此标志，所有命令缓冲区必须一起重置，可能会导致性能下降。
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        poolInfo.queueFamilyIndex = QueueFamilyIndices.graphicsFamily.value();
+
+        if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create command pool!");
+        }
+    }
+
+    void createCommandBuffers()
+    {
+        commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = commandPool;
+        // level 参数指定分配的command buffer是主命令缓冲区还是次级命令缓冲区。主命令缓冲区可以直接提交到队列执行，次级命令缓冲区不能直接提交，必须被主命令缓冲区调用才能执行。
+        // 次级命令缓冲区通常用于多线程录制命令，或者当你想要重用一部分命令时。当前我们只需要一个主命令缓冲区，所以设置为VK_COMMAND_BUFFER_LEVEL_PRIMARY。
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+
+        if (vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to allocate command buffers!");
+        }
+    }
+
+    // 将要执行的命令写入command buffer
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+    {
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        // flags 参数指定如何使用 command buffer
+        // * VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: command buffer 只会被提交执行一次。使用完后就会被重置或销毁。驱动可以为这种命令缓冲区优化内存分配。
+        // * VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT: command buffer 将在一个 render pass 中被执行。这个 flag 只能用于次级命令缓冲区，主命令缓冲区不能设置这个 flag。
+        // * VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT: command buffer 可以同时被多个队列提交执行。默认情况下，command buffer 在一次提交执行后就不能再次提交，必须等到执行完成后才能再次提交。如果设置了这个 flag，就可以在 command buffer 执行时再次提交它，前提是它之前的执行已经完成了。
+        beginInfo.flags = 0; // Optional
+        // pInheritanceInfo 只有当command buffer是次级命令缓冲区时才需要这个参数，它告诉vulkan次级命令缓冲区将被哪个主命令缓冲区调用，以及在什么render pass和subpass中被调用。当前我们只使用主命令缓冲区，所以设置为nullptr。
+        beginInfo.pInheritanceInfo = nullptr; // Optional
+
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to begin recording command buffer!");
+        }
+
+        // start a render pass
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+
+        // 定义渲染区域的大小。渲染区域决定了shader加载和存储数据的位置。该区域外的像素将有未定义的值。渲染区域的大小应该与attachment的大小相匹配，这样才能正确渲染到整个图像上。当前我们设置渲染区域覆盖整个swap chain图像。
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}}; // 定义clear color，清空颜色缓冲区时会用到
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+
+        // Param 1: 记录命令的Command Buffer
+        // Param 2: render pass的创建信息，告诉vulkan我们要使用哪个render pass、哪个framebuffer、渲染区域的大小、clear color等
+        // Param 3:
+        // * VK_SUBPASS_CONTENTS_INLINE: 命令直接记录在主命令缓冲区里，不使用次级命令缓冲区。这是最简单的方式，适合大多数情况。
+        // * VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS: 渲染通道命令将从次级命令缓冲区中获取
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline); // 绑定管线对象，告诉vulkan后续的绘制命令要使用哪个管线
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float)swapChainExtent.width;
+        viewport.height = (float)swapChainExtent.height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = swapChainExtent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        // vertexCount = 3: 画3个顶点
+        // instanceCount = 1: 画1份实例。如果设置为100，同样的3个顶点会画100次，每次gl_InstanceIndex不同，常用于草地、树木等大量重复物体的高效渲染
+        // fistVertex = 0: gl_VertexIndex从0开始。如果设置为5，那么就从5开始，相当于跳过前5个顶点
+        // firstInstance = 0: gl_InstanceIndex从0开始。如果设置为5，那么就从5开始，相当于跳过前5份实例
+        // 画1个实例，每个实例3个顶点，从头开始画
+        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+        vkCmdEndRenderPass(commandBuffer);
+
+        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to record command buffer!");
+        }
+    }
+
     void MainLoop()
     {
         while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
+            drawFrame();
+        }
+        vkDeviceWaitIdle(device);
+    }
+
+    void drawFrame()
+    {
+        // VULKAN渲染帧常见步骤
+        // 1. 等待上一帧结果
+        vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX); // 检查fence是否是绿灯
+        // 2. 从swap chain中获取图像
+        uint32_t imageIndex;
+        VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+        // * VK_ERROR_OUT_OF_DATE_KHR: swap chain和surface不匹配，无法再用于渲染。通常发生再窗口大小调整之后
+        // * VK_SUBOPTIMAL_KHR: swap chain仍然可以用于成功present到surface，但surface属性不再完全匹配
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            recreateSwapChain();
+        }
+        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+        {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
+
+        vkResetFences(device, 1, &inFlightFences[currentFrame]); // 把fence拨回红灯
+
+        // 3. 记录一个command buffer，该buffer会将场景绘制到图像中
+        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+        recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+        // 4. 提交记录的command buffer
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+        // 指定在渲染管线哪个阶段等：
+        // vertex shader阶段：不用等，可以先跑
+        // rasterization阶段：不用等，可以先跑
+        // 颜色输出阶段：这里要等，因为要往图像上写颜色了
+        VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+        submitInfo.waitSemaphoreCount = 1;
+        // 等waitSemaphore[0]触发后，才允许进入waitStages[0]阶段
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
+
+        // 完成后，向rederFinished信号量发送信号
+        VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to submit draw command buffer!");
+        }
+
+        // 5. 把图像呈现到屏幕上
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+
+        VkSwapchainKHR swapChains[] = {swapChain};
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = &imageIndex;
+        presentInfo.pResults = nullptr;
+
+        result = vkQueuePresentKHR(presentQueue, &presentInfo);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
+        {
+            framebufferResized = false;
+            recreateSwapChain();
+        }
+        else if (result != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
+
+        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    void createSyncObjects()
+    {
+        imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+        VkSemaphoreCreateInfo semaphoreInfo{};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        // 一出生就是绿灯，防止第一次等Fence的时候没有reset而阻塞
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
+                vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+                vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
+            {
+                throw std::runtime_error("failed to create semaphores!");
+            }
         }
     }
 
     void Cleanup()
     {
-        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-        vkDestroyRenderPass(device, renderPass, nullptr);
-        for (auto imageView : swapChainImageViews)
+        cleanupSwapChain();
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            vkDestroyImageView(device, imageView, nullptr);
+            vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+            vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+            vkDestroyFence(device, inFlightFences[i], nullptr);
         }
 
-        vkDestroySwapchainKHR(device, swapChain, nullptr);
+        vkDestroyCommandPool(device, commandPool, nullptr);
+        for (auto framebuffer : swapChainFramebuffers)
+        {
+            vkDestroyFramebuffer(device, framebuffer, nullptr);
+        }
+
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        vkDestroyRenderPass(device, renderPass, nullptr);
         vkDestroyDevice(device, nullptr);
         if (enableValidationLayers)
         {
@@ -907,7 +1244,7 @@ private:
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
         void *pUserData)
     {
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        std::cerr << "---------------------\nvalidation layer: " << pCallbackData->pMessage << std::endl;
         return VK_FALSE;
     }
 
@@ -921,6 +1258,7 @@ private:
     VkDevice device;
 
     VkQueue graphicsQueue;
+    VkQueue presentQueue;
 
     VkSurfaceKHR surface;
 
@@ -934,11 +1272,27 @@ private:
     VkRenderPass renderPass;
 
     VkPipelineLayout pipelineLayout;
+
+    VkPipeline graphicsPipeline;
+
+    std::vector<VkFramebuffer> swapChainFramebuffers;
+
+    VkCommandPool commandPool;
+
+    std::vector<VkCommandBuffer> commandBuffers;
+
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
+
+    bool framebufferResized;
+
+    uint32_t currentFrame = 0;
 };
 
 int main()
 {
-    HelloTriangleApplication app;
+    TriangleApplication app;
     try
     {
         app.run();
