@@ -15,6 +15,7 @@
 #include <limits>
 #include <algorithm>
 #include <fstream>
+#include <glm/glm.hpp>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -93,6 +94,59 @@ struct SwapChainSupportDetails
     //      和 VK_PRESENT_MODE_FIFO_KHR 类似，但如果队列满了，它不会阻塞应用程序，而是直接用新图像替换已排队的图像。
     //      e.g. 有三张Image：A正在被显示器显示，B在队列里等待，GPU在往C上渲染。C渲染完了之后直接替换队列的B，GPU不等待立刻开始渲染下一帧。显示器席次刷新时取走的是最新的C而不是旧的B
     std::vector<VkPresentModeKHR> presentModes;
+};
+
+struct Vertex
+{
+    glm::vec2 pos;
+    glm::vec3 color;
+
+    // 怎么从buffer中一个个读取顶点数据
+    static VkVertexInputBindingDescription getBindingDescription()
+    {
+        VkVertexInputBindingDescription bindingDescription{};
+        // 这是第0号绑定点，如果有多个buffer<分别>存位置和颜色，就需要binding0、binding1
+        // 当前所有数据打包在一个buffer里，只需要一个绑定点
+        bindingDescription.binding = 0;
+        // 每个顶点占多少字节
+        // GPU读完20字节后，跳20字节就是下一个顶点
+        bindingDescription.stride = sizeof(Vertex);
+        // * VK_VERTEX_INPUT_RATE_VERTEX: “每个顶点读一次”。在每个顶点之后移动到下一个数据条目
+        // * VK_VERTEX_INPUT_RATE_INSTANCE: “每个实例读一次”。每次实例后移动到下一个数据条目
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        return bindingDescription;
+    }
+
+    // 怎么从buffer里读取一个<具体属性>
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
+    {
+        // 大小2的固定大小数组,因为知道了vertieces包含两个属性，vec2的顶点和vec3的颜色
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        // R32G32 = 2个float = vec2
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+
+        // offsetof: C++宏，计算结构体中某个成员从结构体开头算起的字节偏移量
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+        return attributeDescriptions;
+    }
+};
+
+// 顶点数据在内存中的布局:
+//[x,y,r,g,b] [x,y,r,g,b] [x,y,r,g,b]
+//  顶点0        顶点1         顶点2
+//|←stride→ |
+const std::vector<Vertex> vertices = {
+    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
 };
 
 class TriangleApplication
@@ -701,15 +755,18 @@ private:
         dynamicStatesInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
         dynamicStatesInfo.pDynamicStates = dynamicStates.data();
 
+        auto bindingDescription = Vertex::getBindingDescription();
+        auto attributeDescription = Vertex::getAttributeDescriptions();
+
         // 顶点输入
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         // 数据怎么从buffer里读：每个顶点占多少字节、是逐顶点读还是逐实例读。“一行数据有多宽”
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.pVertexBindingDescriptions = nullptr;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
         // 顶点里有哪些属性、怎么拆分
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-        vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.data();
 
         // Input assembly 输入组件
         // * VkPipelineInputAssemblyStateCreateInfo 结构体描述了: 1. 从顶点绘制的几何体类型 2. 是否启用图元重启
