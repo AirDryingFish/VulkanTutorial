@@ -186,6 +186,7 @@ private:
         createGraphicsPipeline();
         createFramebuffers();
         createCommandPool();
+        createVertexBuffer();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -966,6 +967,117 @@ private:
         }
     }
 
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
+    {
+
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = size;
+        bufferInfo.usage = usage; // 这个buffer是用来当顶点缓冲区的
+        // 缓冲区可以由特定队列族所有，或者在多个队列族之间共享。
+        // 顶点缓冲区只会从图形队列中使用，因此可以使用EXCLUSIVE模式。只有当不同队列族需要访问同一个缓冲区时，才需要使用CONCURRENT模式，并且还需要指定所有访问该缓冲区的队列族索引。
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create vertex buffer!");
+        }
+
+        // 分配内存
+        // step 1: 查询缓冲区需要什么样的内存。
+        // memRequirements告诉三件事：
+        // 1. size: 需要分配的内存大小(字节数)。这个值可能会根据buffer的usage和format等属性而变化。
+        // 2. alignment: 内存的对齐要求。分配的内存地址必须是alignment的倍数。这个值可能会根据buffer的usage和format等属性而变化。
+        // 3. memoryTypeBits: 一个位掩码，表示哪些类型的内存可以用来分配这个buffer。每个位对应一个内存类型，如果某个位为1，表示该内存类型支持这个buffer的需求。这个值取决于buffer的usage和format等属性，以及物理设备的内存特性。
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        // step 2: 根据第一步查询到的内存需求，找到一个既满足buffer需求又具有指定属性的内存类型。比如我们需要一个既能当作顶点缓冲区又可以直接从CPU访问的内存类型。
+        // HOST_VISIBLE + HOST_COHERENT: CPU可写，且自动同步
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to allocate vertex buffer memory!");
+        }
+        vkBindBufferMemory(device, buffer, bufferMemory, 0);
+    }
+
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    {
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = commandPool;
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+        VkBufferCopy copyRegion{};
+        copyRegion.srcOffset = 0; // Optional
+        copyRegion.dstOffset = 0; // Optional
+        copyRegion.size = size;
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+        vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+
+        vkQueueWaitIdle(graphicsQueue);
+        vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+    }
+
+    void createVertexBuffer()
+    {
+        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void *data;
+        // vkMapMemory: 把一段GPU端的内容映射到CPU端的指针data
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        // 把顶点数据拷贝到映射区data
+        memcpy(data, vertices.data(), (size_t)bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+
+        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+    // 查询显卡提供了哪些内存类型，并找到一个既满足buffer需求又具有指定属性的内存类型。比如我们需要一个既能当作顶点缓冲区又可以直接从CPU访问的内存类型。
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+    {
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            // typeFilter & (1 << i): 检查第i种内存类型是否在缓冲区支持的类型里（由第一步的memoryTypeBits决定）
+            // memProperties.memoryTypes[i].propertyFlags & properties: 检查第i种内存类型是否具有我们需要的属性（比如HOST_VISIBLE和HOST_COHERENT）
+            if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                return i;
+            }
+        }
+        throw std::runtime_error("failed to find suitable memory type!");
+    }
+
     void createCommandBuffers()
     {
         commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1038,12 +1150,16 @@ private:
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+        VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets); // 绑定顶点缓冲区，告诉vulkan后续的绘制命令要从哪个缓冲区读取顶点数据，以及每个顶点数据的偏移量
+
         // vertexCount = 3: 画3个顶点
         // instanceCount = 1: 画1份实例。如果设置为100，同样的3个顶点会画100次，每次gl_InstanceIndex不同，常用于草地、树木等大量重复物体的高效渲染
         // fistVertex = 0: gl_VertexIndex从0开始。如果设置为5，那么就从5开始，相当于跳过前5个顶点
         // firstInstance = 0: gl_InstanceIndex从0开始。如果设置为5，那么就从5开始，相当于跳过前5份实例
         // 画1个实例，每个实例3个顶点，从头开始画
-        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
         vkCmdEndRenderPass(commandBuffer);
 
@@ -1167,6 +1283,8 @@ private:
     void Cleanup()
     {
         cleanupSwapChain();
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+        vkFreeMemory(device, vertexBufferMemory, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
@@ -1337,6 +1455,9 @@ private:
     VkCommandPool commandPool;
 
     std::vector<VkCommandBuffer> commandBuffers;
+
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
