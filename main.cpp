@@ -144,10 +144,13 @@ struct Vertex
 //  顶点0        顶点1         顶点2
 //|←stride→ |
 const std::vector<Vertex> vertices = {
-    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
-};
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+
+const std::vector<uint16_t> indices = {
+    0, 1, 2, 2, 3, 0};
 
 class TriangleApplication
 {
@@ -187,6 +190,7 @@ private:
         createFramebuffers();
         createCommandPool();
         createVertexBuffer();
+        createIndexBuffer();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -1040,6 +1044,25 @@ private:
         vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
     }
 
+    void createIndexBuffer()
+    {
+        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBuffferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBuffferMemory);
+
+        void *data;
+        vkMapMemory(device, stagingBuffferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, indices.data(), (size_t)bufferSize);
+        vkUnmapMemory(device, stagingBuffferMemory);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBuffferMemory, nullptr);
+    }
+
     void createVertexBuffer()
     {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
@@ -1154,12 +1177,16 @@ private:
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets); // 绑定顶点缓冲区，告诉vulkan后续的绘制命令要从哪个缓冲区读取顶点数据，以及每个顶点数据的偏移量
 
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16); // 绑定索引缓冲区，告诉vulkan后续的绘制命令要从哪个缓冲区读取索引数据，以及每个索引数据的偏移量和类型
+
         // vertexCount = 3: 画3个顶点
         // instanceCount = 1: 画1份实例。如果设置为100，同样的3个顶点会画100次，每次gl_InstanceIndex不同，常用于草地、树木等大量重复物体的高效渲染
         // fistVertex = 0: gl_VertexIndex从0开始。如果设置为5，那么就从5开始，相当于跳过前5个顶点
         // firstInstance = 0: gl_InstanceIndex从0开始。如果设置为5，那么就从5开始，相当于跳过前5份实例
         // 画1个实例，每个实例3个顶点，从头开始画
-        vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        // vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0); // 画1个实例，每个实例3个顶点，从头开始画
 
         vkCmdEndRenderPass(commandBuffer);
 
@@ -1283,6 +1310,10 @@ private:
     void Cleanup()
     {
         cleanupSwapChain();
+
+        vkDestroyBuffer(device, indexBuffer, nullptr);
+        vkFreeMemory(device, indexBufferMemory, nullptr);
+
         vkDestroyBuffer(device, vertexBuffer, nullptr);
         vkFreeMemory(device, vertexBufferMemory, nullptr);
 
@@ -1458,6 +1489,8 @@ private:
 
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
