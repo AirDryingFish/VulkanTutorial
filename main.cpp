@@ -205,6 +205,7 @@ private:
         createIndexBuffer();
         createUniformBuffer();
         createDescriptorPool();
+        createDescriptorSets();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -864,7 +865,8 @@ private:
         // 背面剔除：丢弃背对观察者的三角形。对于单面渲染来说，背面通常不可见，所以可以启用背面剔除来提高性能。对于双面渲染来说，前后都要渲染，所以设置为VK_NONE。
         rasterizerInfo.cullMode = VK_CULL_MODE_BACK_BIT;
         // 指定哪个面是正面。默认情况下，顶点按逆时针顺序定义的三角形被认为是正面。这里设置为顺时针，所以按顺时针顺序定义的三角形被认为是正面。
-        rasterizerInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        // rasterizerInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizerInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizerInfo.depthBiasEnable = VK_FALSE;     // 深度偏移，通常用于阴影贴图。当前不需要，所以设置为VK_FALSE。
         rasterizerInfo.depthBiasConstantFactor = 0.0f; // 可选
         rasterizerInfo.depthBiasClamp = 0.0f;          // 可选
@@ -1151,10 +1153,48 @@ private:
             throw std::runtime_error("failed to create descriptor pool!");
         }
     }
-    
+
     void createDescriptorSets()
     {
-        
+        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        allocInfo.pSetLayouts = layouts.data();
+
+        descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            VkDescriptorBufferInfo bufferInfo{};
+            bufferInfo.buffer = uniformBuffers[i];
+            bufferInfo.offset = 0;
+            bufferInfo.range = sizeof(UniformBufferObject);
+
+            VkWriteDescriptorSet descriptorWrite{};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = descriptorSets[i];
+            // 写入binding 0上的descriptor
+            descriptorWrite.dstBinding = 0;
+            // descriptorWrite.dstArrayElement: 如果binding是一个数组，这个参数指定从数组的哪个元素开始写入。当前我们没有使用数组，所以设置为0。
+            descriptorWrite.dstArrayElement = 0;
+
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrite.descriptorCount = 1;
+
+            descriptorWrite.pBufferInfo = &bufferInfo;
+            descriptorWrite.pImageInfo = nullptr;       // Optional
+            descriptorWrite.pTexelBufferView = nullptr; // Optional
+            // vkUpdateDescriptorSets: 把我们填充好的descriptorWrite写入descriptor set中。
+            // 这个函数可以一次写入多个descriptor set，所以它接受一个数组和一个计数参数。当前我们每次只写入一个descriptor set，所以设置为1。
+            // vkUpdateDescriptorSets还有一个数组参数可以同时写入多个descriptor set，但我们当前不需要，所以设置为nullptr和0。
+            vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+        }
     }
 
     // 查询显卡提供了哪些内存类型，并找到一个既满足buffer需求又具有指定属性的内存类型。比如我们需要一个既能当作顶点缓冲区又可以直接从CPU访问的内存类型。
@@ -1258,6 +1298,7 @@ private:
         // firstInstance = 0: gl_InstanceIndex从0开始。如果设置为5，那么就从5开始，相当于跳过前5份实例
         // 画1个实例，每个实例3个顶点，从头开始画
         // vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr); // 绑定描述符集，告诉vulkan后续的绘制命令要使用哪个描述符集来获取shader需要的外部数据（比如uniform buffer）
 
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0); // 画1个实例，每个实例3个顶点，从头开始画
 
@@ -1411,6 +1452,7 @@ private:
             vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
         }
 
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
         vkDestroyBuffer(device, indexBuffer, nullptr);
@@ -1599,6 +1641,7 @@ private:
     std::vector<void *> uniformBufferMapped;
 
     VkDescriptorPool descriptorPool;
+    std::vector<VkDescriptorSet> descriptorSets;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
