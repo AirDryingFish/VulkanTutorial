@@ -1,0 +1,17 @@
+# ninja log v7
+13	13343	7999400749655918	CMakeFiles/vulkan.dir/main.cpp.obj	eff133d300099e13
+16137	20644	7999400910899219	vulkan.exe	a166adcbdb1459c2
+3	513	7999420111246793	build.ninja	4020c8c3ba21187
+3	513	7999420111161609	E:/vulkan/build/cmake_install.cmake	4020c8c3ba21187
+48	6525	7999400750016690	CMakeFiles/vulkan.dir/src/DebugUtils.cpp.obj	ca6189ab426e12a7
+154	12906	7999400751071215	CMakeFiles/vulkan.dir/src/TriangleApplication.cpp.obj	ad1d7864a2f8d703
+61	13128	7999400750142247	CMakeFiles/vulkan.dir/src/Descriptors.cpp.obj	2544bf1db704e678
+397	13212	7999400753492952	CMakeFiles/vulkan.dir/src/VulkanInstance.cpp.obj	f6fd4e567d125b98
+75	13316	7999400750273567	CMakeFiles/vulkan.dir/src/GraphicsPipeline.cpp.obj	bf3c22cf25386c8b
+34	13371	7999400749866430	CMakeFiles/vulkan.dir/src/CommandBuffers.cpp.obj	c2ac0840e4958953
+23	13432	7999400749761132	CMakeFiles/vulkan.dir/src/Buffers.cpp.obj	da4c79149e6b434b
+133	13584	7999400750860584	CMakeFiles/vulkan.dir/src/SwapChain.cpp.obj	9368eb1154b36b8b
+384	13630	7999400753367624	CMakeFiles/vulkan.dir/src/VulkanDevice.cpp.obj	19a752cc51678a3e
+116	13662	7999400750690030	CMakeFiles/vulkan.dir/src/Renderer.cpp.obj	a2e6667953a3f91
+89	14544	7999400750424105	CMakeFiles/vulkan.dir/src/ImageResources.cpp.obj	11d32e0c8d207b33
+102	16137	7999400750559618	CMakeFiles/vulkan.dir/src/Model.cpp.obj	310b69c4516d4b2c
