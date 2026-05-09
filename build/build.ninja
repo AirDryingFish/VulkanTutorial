@@ -54,7 +54,7 @@ build CMakeFiles/vulkan.dir/main.cpp.obj: CXX_COMPILER__vulkan_unscanned_Debug E
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\main.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -64,7 +64,7 @@ build CMakeFiles/vulkan.dir/src/Buffers.cpp.obj: CXX_COMPILER__vulkan_unscanned_
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\Buffers.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -74,7 +74,7 @@ build CMakeFiles/vulkan.dir/src/CommandBuffers.cpp.obj: CXX_COMPILER__vulkan_uns
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\CommandBuffers.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -84,7 +84,7 @@ build CMakeFiles/vulkan.dir/src/DebugUtils.cpp.obj: CXX_COMPILER__vulkan_unscann
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\DebugUtils.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -94,7 +94,7 @@ build CMakeFiles/vulkan.dir/src/Descriptors.cpp.obj: CXX_COMPILER__vulkan_unscan
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\Descriptors.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -104,7 +104,7 @@ build CMakeFiles/vulkan.dir/src/GraphicsPipeline.cpp.obj: CXX_COMPILER__vulkan_u
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\GraphicsPipeline.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -114,7 +114,7 @@ build CMakeFiles/vulkan.dir/src/ImageResources.cpp.obj: CXX_COMPILER__vulkan_uns
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\ImageResources.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -124,7 +124,7 @@ build CMakeFiles/vulkan.dir/src/Model.cpp.obj: CXX_COMPILER__vulkan_unscanned_De
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\Model.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -134,7 +134,7 @@ build CMakeFiles/vulkan.dir/src/Renderer.cpp.obj: CXX_COMPILER__vulkan_unscanned
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\Renderer.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -144,7 +144,7 @@ build CMakeFiles/vulkan.dir/src/SwapChain.cpp.obj: CXX_COMPILER__vulkan_unscanne
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\SwapChain.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -154,7 +154,7 @@ build CMakeFiles/vulkan.dir/src/TriangleApplication.cpp.obj: CXX_COMPILER__vulka
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\TriangleApplication.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -164,7 +164,7 @@ build CMakeFiles/vulkan.dir/src/VulkanDevice.cpp.obj: CXX_COMPILER__vulkan_unsca
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\VulkanDevice.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -174,7 +174,27 @@ build CMakeFiles/vulkan.dir/src/VulkanInstance.cpp.obj: CXX_COMPILER__vulkan_uns
   DEFINES = -DGLFW_DLL
   DEP_FILE = CMakeFiles\vulkan.dir\src\VulkanInstance.cpp.obj.d
   FLAGS = -g -std=gnu++17
-  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
+  OBJECT_DIR = CMakeFiles\vulkan.dir
+  OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
+  TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
+
+build CMakeFiles/vulkan.dir/src/VmaImplimentation.cpp.obj: CXX_COMPILER__vulkan_unscanned_Debug E$:/vulkan/src/VmaImplimentation.cpp || cmake_object_order_depends_target_vulkan
+  CONFIG = Debug
+  DEFINES = -DGLFW_DLL
+  DEP_FILE = CMakeFiles\vulkan.dir\src\VmaImplimentation.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
+  OBJECT_DIR = CMakeFiles\vulkan.dir
+  OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
+  TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
+
+build CMakeFiles/vulkan.dir/src/VulkanAllocator.cpp.obj: CXX_COMPILER__vulkan_unscanned_Debug E$:/vulkan/src/VulkanAllocator.cpp || cmake_object_order_depends_target_vulkan
+  CONFIG = Debug
+  DEFINES = -DGLFW_DLL
+  DEP_FILE = CMakeFiles\vulkan.dir\src\VulkanAllocator.cpp.obj.d
+  FLAGS = -g -std=gnu++17
+  INCLUDES = -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem C:/VulkanSDK/1.4.341.1/include -isystem E:/vcpkg/installed/x64-windows/include/vma
   OBJECT_DIR = CMakeFiles\vulkan.dir
   OBJECT_FILE_DIR = CMakeFiles\vulkan.dir\src
   TARGET_SUPPORT_DIR = CMakeFiles\vulkan.dir
@@ -187,7 +207,7 @@ build CMakeFiles/vulkan.dir/src/VulkanInstance.cpp.obj: CXX_COMPILER__vulkan_uns
 #############################################
 # Link the executable vulkan.exe
 
-build vulkan.exe: CXX_EXECUTABLE_LINKER__vulkan_Debug CMakeFiles/vulkan.dir/main.cpp.obj CMakeFiles/vulkan.dir/src/Buffers.cpp.obj CMakeFiles/vulkan.dir/src/CommandBuffers.cpp.obj CMakeFiles/vulkan.dir/src/DebugUtils.cpp.obj CMakeFiles/vulkan.dir/src/Descriptors.cpp.obj CMakeFiles/vulkan.dir/src/GraphicsPipeline.cpp.obj CMakeFiles/vulkan.dir/src/ImageResources.cpp.obj CMakeFiles/vulkan.dir/src/Model.cpp.obj CMakeFiles/vulkan.dir/src/Renderer.cpp.obj CMakeFiles/vulkan.dir/src/SwapChain.cpp.obj CMakeFiles/vulkan.dir/src/TriangleApplication.cpp.obj CMakeFiles/vulkan.dir/src/VulkanDevice.cpp.obj CMakeFiles/vulkan.dir/src/VulkanInstance.cpp.obj | C$:/VulkanSDK/1.4.341.1/Lib/vulkan-1.lib E$:/vcpkg/installed/x64-windows/debug/lib/glfw3dll.lib E$:/vcpkg/installed/x64-windows/debug/lib/glm.lib E$:/vcpkg/installed/x64-windows/debug/lib/tinyobjloader.lib
+build vulkan.exe: CXX_EXECUTABLE_LINKER__vulkan_Debug CMakeFiles/vulkan.dir/main.cpp.obj CMakeFiles/vulkan.dir/src/Buffers.cpp.obj CMakeFiles/vulkan.dir/src/CommandBuffers.cpp.obj CMakeFiles/vulkan.dir/src/DebugUtils.cpp.obj CMakeFiles/vulkan.dir/src/Descriptors.cpp.obj CMakeFiles/vulkan.dir/src/GraphicsPipeline.cpp.obj CMakeFiles/vulkan.dir/src/ImageResources.cpp.obj CMakeFiles/vulkan.dir/src/Model.cpp.obj CMakeFiles/vulkan.dir/src/Renderer.cpp.obj CMakeFiles/vulkan.dir/src/SwapChain.cpp.obj CMakeFiles/vulkan.dir/src/TriangleApplication.cpp.obj CMakeFiles/vulkan.dir/src/VulkanDevice.cpp.obj CMakeFiles/vulkan.dir/src/VulkanInstance.cpp.obj CMakeFiles/vulkan.dir/src/VmaImplimentation.cpp.obj CMakeFiles/vulkan.dir/src/VulkanAllocator.cpp.obj | C$:/VulkanSDK/1.4.341.1/Lib/vulkan-1.lib E$:/vcpkg/installed/x64-windows/debug/lib/glfw3dll.lib E$:/vcpkg/installed/x64-windows/debug/lib/glm.lib E$:/vcpkg/installed/x64-windows/debug/lib/tinyobjloader.lib
   CONFIG = Debug
   FLAGS = -g
   LINK_LIBRARIES = C:/VulkanSDK/1.4.341.1/Lib/vulkan-1.lib  E:/vcpkg/installed/x64-windows/debug/lib/glfw3dll.lib  E:/vcpkg/installed/x64-windows/debug/lib/glm.lib  E:/vcpkg/installed/x64-windows/debug/lib/tinyobjloader.lib  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
@@ -245,14 +265,14 @@ build all: phony vulkan.exe
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja E$:/vulkan/build/cmake_install.cmake: RERUN_CMAKE | C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeDependentOption.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeFindDependencyMacro.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeRCInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckIncludeFileCXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageMessage.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindThreads.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindVulkan.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-Initialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-windres.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/WindowsPaths.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/SelectLibraryConfigurations.cmake CMakeCache.txt CMakeFiles/4.2.0-rc2/CMakeCXXCompiler.cmake CMakeFiles/4.2.0-rc2/CMakeRCCompiler.cmake CMakeFiles/4.2.0-rc2/CMakeSystem.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Config.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3ConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-debug.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-release.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig-debug.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig-release.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/stb/FindStb.cmake E$:/vcpkg/installed/x64-windows/share/stb/vcpkg-cmake-wrapper.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-config-version.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-config.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets-debug.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets-release.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets.cmake E$:/vcpkg/scripts/buildsystems/vcpkg.cmake E$:/vulkan/CMakeLists.txt
+build build.ninja E$:/vulkan/build/cmake_install.cmake: RERUN_CMAKE | C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeDependentOption.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeFindDependencyMacro.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeRCInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckIncludeFileCXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageMessage.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindThreads.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindVulkan.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-Initialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-windres.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/WindowsPaths.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/SelectLibraryConfigurations.cmake CMakeCache.txt CMakeFiles/4.2.0-rc2/CMakeCXXCompiler.cmake CMakeFiles/4.2.0-rc2/CMakeRCCompiler.cmake CMakeFiles/4.2.0-rc2/CMakeSystem.cmake E$:/vcpkg/installed/x64-windows/share/VulkanMemoryAllocator/VulkanMemoryAllocatorConfig.cmake E$:/vcpkg/installed/x64-windows/share/VulkanMemoryAllocator/VulkanMemoryAllocatorConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Config.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3ConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-debug.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-release.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig-debug.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig-release.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/stb/FindStb.cmake E$:/vcpkg/installed/x64-windows/share/stb/vcpkg-cmake-wrapper.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-config-version.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-config.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets-debug.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets-release.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets.cmake E$:/vcpkg/scripts/buildsystems/vcpkg.cmake E$:/vulkan/CMakeLists.txt
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeDependentOption.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeFindDependencyMacro.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeRCInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckIncludeFileCXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageMessage.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindThreads.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindVulkan.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-Initialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-windres.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/WindowsPaths.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/SelectLibraryConfigurations.cmake CMakeCache.txt CMakeFiles/4.2.0-rc2/CMakeCXXCompiler.cmake CMakeFiles/4.2.0-rc2/CMakeRCCompiler.cmake CMakeFiles/4.2.0-rc2/CMakeSystem.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Config.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3ConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-debug.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-release.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig-debug.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig-release.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/stb/FindStb.cmake E$:/vcpkg/installed/x64-windows/share/stb/vcpkg-cmake-wrapper.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-config-version.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-config.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets-debug.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets-release.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets.cmake E$:/vcpkg/scripts/buildsystems/vcpkg.cmake E$:/vulkan/CMakeLists.txt: phony
+build C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeDependentOption.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeFindDependencyMacro.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeRCInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckIncludeFileCXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageMessage.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindThreads.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindVulkan.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Windows-GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-Initialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows-windres.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Windows.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/WindowsPaths.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/SelectLibraryConfigurations.cmake CMakeCache.txt CMakeFiles/4.2.0-rc2/CMakeCXXCompiler.cmake CMakeFiles/4.2.0-rc2/CMakeRCCompiler.cmake CMakeFiles/4.2.0-rc2/CMakeSystem.cmake E$:/vcpkg/installed/x64-windows/share/VulkanMemoryAllocator/VulkanMemoryAllocatorConfig.cmake E$:/vcpkg/installed/x64-windows/share/VulkanMemoryAllocator/VulkanMemoryAllocatorConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Config.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3ConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-debug.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets-release.cmake E$:/vcpkg/installed/x64-windows/share/glfw3/glfw3Targets.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig-debug.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig-release.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfig.cmake E$:/vcpkg/installed/x64-windows/share/glm/glmConfigVersion.cmake E$:/vcpkg/installed/x64-windows/share/stb/FindStb.cmake E$:/vcpkg/installed/x64-windows/share/stb/vcpkg-cmake-wrapper.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-config-version.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-config.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets-debug.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets-release.cmake E$:/vcpkg/installed/x64-windows/share/tinyobjloader/tinyobjloader-targets.cmake E$:/vcpkg/scripts/buildsystems/vcpkg.cmake E$:/vulkan/CMakeLists.txt: phony
 
 
 #############################################

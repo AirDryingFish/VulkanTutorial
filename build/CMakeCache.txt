@@ -256,6 +256,9 @@ VCPKG_TRACE_FIND_PACKAGE:BOOL=OFF
 //Enables messages from the VCPKG toolchain for debugging purposes.
 VCPKG_VERBOSE:BOOL=OFF
 
+//The directory containing a CMake configuration file for VulkanMemoryAllocator.
+VulkanMemoryAllocator_DIR:PATH=E:/vcpkg/installed/x64-windows/share/VulkanMemoryAllocator
+
 //Path to a program.
 Vulkan_GLSLANG_VALIDATOR_EXECUTABLE:FILEPATH=C:/VulkanSDK/1.4.341.1/Bin/glslangValidator.exe
 
