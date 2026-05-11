@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
-AllocatedImage TriangleApplication::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties)
+AllocatedImage TriangleApplication::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, uint32_t arrayLayers, VkImageCreateFlags flags)
 {
     AllocatedImage allocatedImage{};
 
@@ -25,14 +25,14 @@ AllocatedImage TriangleApplication::createImage(uint32_t width, uint32_t height,
     imageInfo.extent.height = static_cast<uint32_t>(height);
     imageInfo.extent.depth = 1;
     imageInfo.mipLevels = mipLevels;
-    imageInfo.arrayLayers = 1;
+    imageInfo.arrayLayers = arrayLayers;
     imageInfo.format = format;
     imageInfo.tiling = tiling;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     imageInfo.usage = usage;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageInfo.samples = numSamples;
-    imageInfo.flags = 0;
+    imageInfo.flags = flags;
 
     VmaAllocationCreateInfo allocInfo{};
     allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
@@ -95,7 +95,8 @@ void TriangleApplication::generateMipmaps(VkImage image, VkFormat imageFormat, u
         throw std::runtime_error("texture image format does not support linear blitting!");
     }
 
-    immediateSubmit([&](VkCommandBuffer commandBuffer) {
+    immediateSubmit([&](VkCommandBuffer commandBuffer)
+                    {
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.image = image;
@@ -187,22 +188,21 @@ void TriangleApplication::generateMipmaps(VkImage image, VkFormat imageFormat, u
             0,
             0, nullptr,
             0, nullptr,
-            1, &barrier);
-    });
+            1, &barrier); });
 }
 
-VkImageView TriangleApplication::createImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags)
+VkImageView TriangleApplication::createImageView(VkImage image, VkFormat format, uint32_t mipLevels, VkImageAspectFlags aspectFlags, VkImageViewType viewType, uint32_t layerCount)
 {
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewInfo.image = image;
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.viewType = viewType;
     viewInfo.format = format;
     viewInfo.subresourceRange.aspectMask = aspectFlags;
     viewInfo.subresourceRange.baseMipLevel = 0;
     viewInfo.subresourceRange.levelCount = mipLevels;
     viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount = 1;
+    viewInfo.subresourceRange.layerCount = layerCount;
 
     VkImageView imageView;
     if (vkCreateImageView(device, &viewInfo, nullptr, &imageView))
@@ -216,9 +216,8 @@ VkImageView TriangleApplication::createImageView(VkImage image, VkFormat format,
 void TriangleApplication::createTextureImageView()
 {
     textureImage.imageView = createImageView(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
-    mainDeletionQueue.pushFunction([this, image = textureImage]() mutable {
-        destroyImage(image);
-    });
+    mainDeletionQueue.pushFunction([this, image = textureImage]() mutable
+                                   { destroyImage(image); });
 }
 
 void TriangleApplication::createTextureSampler()
@@ -250,14 +249,14 @@ void TriangleApplication::createTextureSampler()
         throw std::runtime_error("failed to create texture sampler!");
     }
 
-    mainDeletionQueue.pushFunction([this, sampler = textureSampler]() {
-        vkDestroySampler(device, sampler, nullptr);
-    });
+    mainDeletionQueue.pushFunction([this, sampler = textureSampler]()
+                                   { vkDestroySampler(device, sampler, nullptr); });
 }
 
-void TriangleApplication::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
+void TriangleApplication::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, uint32_t layerCount)
 {
-    immediateSubmit([&](VkCommandBuffer commandBuffer) {
+    immediateSubmit([&](VkCommandBuffer commandBuffer)
+                    {
         VkPipelineStageFlags sourceStage;
         VkPipelineStageFlags destinationStage;
 
@@ -292,7 +291,7 @@ void TriangleApplication::transitionImageLayout(VkImage image, VkFormat format, 
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = mipLevels;
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
+        barrier.subresourceRange.layerCount = layerCount;
 
         vkCmdPipelineBarrier(
             commandBuffer,
@@ -301,13 +300,13 @@ void TriangleApplication::transitionImageLayout(VkImage image, VkFormat format, 
             0,
             0, nullptr,
             0, nullptr,
-            1, &barrier);
-    });
+            1, &barrier); });
 }
 
 void TriangleApplication::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 {
-    immediateSubmit([&](VkCommandBuffer commandBuffer) {
+    immediateSubmit([&](VkCommandBuffer commandBuffer)
+                    {
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
         region.bufferRowLength = 0;
@@ -322,8 +321,7 @@ void TriangleApplication::copyBufferToImage(VkBuffer buffer, VkImage image, uint
             height,
             1};
 
-        vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-    });
+        vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region); });
 }
 
 void TriangleApplication::createDepthResources()
@@ -334,9 +332,8 @@ void TriangleApplication::createDepthResources()
                              VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     depthImage.imageView = createImageView(depthImage.image, depthFormat, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
-    swapChainDeletionQueue.pushFunction([this, image = depthImage]() mutable {
-        destroyImage(image);
-    });
+    swapChainDeletionQueue.pushFunction([this, image = depthImage]() mutable
+                                        { destroyImage(image); });
 }
 
 VkFormat TriangleApplication::findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
@@ -420,9 +417,8 @@ void TriangleApplication::createColorResources()
 
     colorImage.imageView = createImageView(colorImage.image, colorFormat, 1);
 
-    swapChainDeletionQueue.pushFunction([this, image = colorImage]() mutable {
-        destroyImage(image);
-    });
+    swapChainDeletionQueue.pushFunction([this, image = colorImage]() mutable
+                                        { destroyImage(image); });
 }
 
 bool TriangleApplication::hasStencilComponent(VkFormat format)

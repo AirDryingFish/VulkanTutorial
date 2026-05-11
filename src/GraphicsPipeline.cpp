@@ -216,18 +216,50 @@ void TriangleApplication::createDescriptorSetLayout()
 
 void TriangleApplication::createGraphicsPipeline()
 {
-    auto vertShaderCode = readFile("../shaders/vert.spv");
-    auto fragShaderCode = readFile("../shaders/frag.spv");
+    GraphicsPipelineConfig config{};
+    config.vertShaderPath = "../shaders/vert.spv";
+    config.fragShaderPath = "../shaders/frag.spv";
+    config.useVertexInput = true;
+    config.cullMode = VK_CULL_MODE_BACK_BIT;
+    config.depthTest = true;
+    config.depthWrite = true;
+    config.depthCompareOp = VK_COMPARE_OP_LESS;
+
+    graphicsPipeline = createGraphicsPipelineFromConfig(config);
+    mainDeletionQueue.pushFunction([this, pipeline = graphicsPipeline]() mutable {
+        vkDestroyPipeline(device, pipeline, nullptr);
+    });
+}
+
+void TriangleApplication::createSkyboxPipeline()
+{
+    GraphicsPipelineConfig config{};
+    config.vertShaderPath = "../shaders/skybox.vert.spv";
+    config.fragShaderPath = "../shaders/skybox.frag.spv";
+    config.useVertexInput = false;
+    config.cullMode = VK_CULL_MODE_NONE;
+    config.depthTest = true;
+    config.depthWrite = false;
+    config.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+
+    skyboxPipeline = createGraphicsPipelineFromConfig(config);
+    mainDeletionQueue.pushFunction([this, pipeline = skyboxPipeline]() mutable {
+        vkDestroyPipeline(device, pipeline, nullptr);
+    });
+}
+
+VkPipeline TriangleApplication::createGraphicsPipelineFromConfig(const GraphicsPipelineConfig &config)
+{
+    auto vertShaderCode = readFile(config.vertShaderPath);
+    auto fragShaderCode = readFile(config.fragShaderPath);
 
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
-    // ------------------------------------------------------------------------------
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
     vertShaderStageInfo.module = vertShaderModule;
-    // 指定shader入口函数的名字，SPIR-V允许一个shader模块包含多个入口函数，这个参数告诉vulkan我们要用哪个入口函数。GLSL默认是main，所以SPIR-V也默认是main。
     vertShaderStageInfo.pName = "main";
 
     VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
@@ -236,212 +268,121 @@ void TriangleApplication::createGraphicsPipeline()
     fragShaderStageInfo.module = fragShaderModule;
     fragShaderStageInfo.pName = "main";
 
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+    std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = {vertShaderStageInfo, fragShaderStageInfo};
 
-    // 创建动态状态：可以在绘制时无需重新创建管线即可更改的状态。比如视口和裁剪区域经常需要根据窗口大小调整，如果把它们设为动态状态，就不需要在窗口大小改变时重新创建管线了。
-    std::vector<VkDynamicState> dynamicStates =
-        {
-            VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_SCISSOR};
+    std::array<VkDynamicState, 2> dynamicStates = {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR,
+    };
 
-    VkPipelineDynamicStateCreateInfo dynamicStatesInfo{};
-    dynamicStatesInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicStatesInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-    dynamicStatesInfo.pDynamicStates = dynamicStates.data();
+    VkPipelineDynamicStateCreateInfo dynamicState{};
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+    dynamicState.pDynamicStates = dynamicStates.data();
 
     auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescription = Vertex::getAttributeDescriptions();
+    auto attributeDescriptions = Vertex::getAttributeDescriptions();
 
-    // 顶点输入
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    // 数据怎么从buffer里读：每个顶点占多少字节、是逐顶点读还是逐实例读。“一行数据有多宽”
-    vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
-    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-    // 顶点里有哪些属性、怎么拆分
-    vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.data();
-
-    // Input assembly 输入组件
-    // * VkPipelineInputAssemblyStateCreateInfo 结构体描述了: 1. 从顶点绘制的几何体类型 2. 是否启用图元重启
-    // 1. 几何体类型可以在topology成员中指定：
-    // VK_PRIMITIVE_TOPOLOGY_POINT_LIST: 每个顶点都是一个独立的点
-    // VK_PRIMITIVE_TOPOLOGY_LINE_LIST: 每两个顶点组成一条线段，不重复使用
-    // VK_PRIMITIVE_TOPOLOGY_LINE_STRIP: 每个顶点和前一个顶点组成一条线段，每行的结束顶点用作下一行的起始顶点
-    // VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST: 每三个顶点组成一个三角形，不重复使用
-    // VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP: 每个顶点和前两个顶点组成一个三角形，每行的结束顶点用作下一行的起始顶点
-    VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
-    inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    inputAssemblyInfo.primitiveRestartEnable = VK_FALSE; // 只有在使用带重启的拓扑（比如LINE_STRIP）时才需要这个参数。它允许你在顶点数据中插入一个特殊的索引值，来表示当前图元结束，下一个图元开始。对于TRIANGLE_LIST来说不需要，所以设置为VK_FALSE。
-
-    // Viewports and scissors
-    // 视口描述了framebuffer中用于渲染输出的区域，总是介于(0, 0)~(width, height)之间
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    // 这里是实际的像素尺寸，不是屏幕坐标系的尺寸。因为vulkan使用的是真实像素，所以swapchain范围也必须以像素为单位指定。
-    viewport.width = (float)swapChainExtent.width;
-    viewport.height = (float)swapChainExtent.height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    VkRect2D scissor{};
-    scissor.offset = {0, 0};
-    scissor.extent = swapChainExtent;
-
-    VkPipelineViewportStateCreateInfo viewportStateInfo{};
-    viewportStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportStateInfo.viewportCount = 1;
-    viewportStateInfo.pViewports = &viewport;
-    viewportStateInfo.scissorCount = 1;
-    viewportStateInfo.pScissors = &scissor;
-
-    // Rasterizer 光栅化器
-    VkPipelineRasterizationStateCreateInfo rasterizerInfo{};
-    rasterizerInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    // 如果启用，光栅化器会把超出近平面和远平面的片段夹紧到近平面和远平面上，而不是丢弃它们。（clamp depth values）
-    // 这样可以避免一些图形失真(阴影贴图有用)，但可能会导致性能下降。对于大多数应用来说，直接丢弃这些片段更简单高效，所以设置为VK_FALSE。
-    rasterizerInfo.depthClampEnable = VK_FALSE;
-    // 如果启用，光栅化器会跳过所有输出到帧缓冲的阶段，直接丢弃所有图元。这对于仅使用顶点处理阶段进行计算的程序很有用，但对于渲染来说必须设置为VK_FALSE。
-    rasterizerInfo.rasterizerDiscardEnable = VK_FALSE;
-    // polygonMode决定了几何体片元的生成方式：
-    // * VKPOLYGON_MODE_FILL: 用片元填充多边形区域
-    // * VKPOLYGON_MODE_LINE: 只用线段描边多边形区域
-    // * VKPOLYGON_MODE_POINT: 只用点描边多边形区域
-    // 如果需要使用非FILL模式，需要：
-    //      VkPhysicalDeviceFeatures deviceFeatures{};
-    //      deviceFeatures.fillModeNonSolid = VK_TRUE; // 启用线框/点模式
-    rasterizerInfo.polygonMode = VK_POLYGON_MODE_FILL;
-    rasterizerInfo.lineWidth = 1.0f; // 线段宽度，只有在polygonMode为LINE时才有意义
-    // 背面剔除：丢弃背对观察者的三角形。对于单面渲染来说，背面通常不可见，所以可以启用背面剔除来提高性能。对于双面渲染来说，前后都要渲染，所以设置为VK_NONE。
-    rasterizerInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-    // 指定哪个面是正面。默认情况下，顶点按逆时针顺序定义的三角形被认为是正面。这里设置为顺时针，所以按顺时针顺序定义的三角形被认为是正面。
-    // rasterizerInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
-    rasterizerInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-    rasterizerInfo.depthBiasEnable = VK_FALSE;     // 深度偏移，通常用于阴影贴图。当前不需要，所以设置为VK_FALSE。
-    rasterizerInfo.depthBiasConstantFactor = 0.0f; // 可选
-    rasterizerInfo.depthBiasClamp = 0.0f;          // 可选
-    rasterizerInfo.depthBiasSlopeFactor = 0.0f;    // 可选
-
-    // Multisampling 多重采样
-    // 将多个光栅化器采样点合并成一个片段的颜色。启用多重采样可以减少锯齿，但会增加性能开销。当前不需要，所以设置为VK_FALSE。
-    VkPipelineMultisampleStateCreateInfo multisamplingInfo{};
-    multisamplingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisamplingInfo.sampleShadingEnable = VK_FALSE;
-    multisamplingInfo.rasterizationSamples = msaaSamples;
-    multisamplingInfo.minSampleShading = 1.0f;          // Optional
-    multisamplingInfo.pSampleMask = nullptr;            // Optional
-    multisamplingInfo.alphaToCoverageEnable = VK_FALSE; // Optional
-    multisamplingInfo.alphaToOneEnable = VK_FALSE;      // Optional
-
-    // Depth and stencil testing 深度和模板测试
-
-    // Color blending 颜色混合
-    // 片元着色器返回颜色后，需要将其与framebuffer中已有颜色混色。有两种方式
-    // 1. 将旧值与新值混色得到最终颜色
-    // 2. 使用按位运算合并旧值和新值
-
-    // 每个附加帧缓冲区的配置
-    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-    // 决定最终哪些通道会被写入framebuffer。现在全开了，所有通道都会写入
-    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_FALSE;                     // 不启用混合，直接覆盖旧值
-    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;  // Optional
-    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;             // Optional
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;  // Optional
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;             // Optional
-
-    // 全局颜色混合设置
-    VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
-    colorBlendingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-    colorBlendingInfo.logicOpEnable = VK_FALSE;   // 不启用按位运算合并，直接使用混合结果
-    colorBlendingInfo.logicOp = VK_LOGIC_OP_COPY; // Optional
-    colorBlendingInfo.attachmentCount = 1;
-    colorBlendingInfo.pAttachments = &colorBlendAttachment;
-    colorBlendingInfo.blendConstants[0] = 0.0f; //
-    colorBlendingInfo.blendConstants[1] = 0.0f; // Optional
-    colorBlendingInfo.blendConstants[2] = 0.0f; // Optional
-    colorBlendingInfo.blendConstants[3] = 0.0f; // Optional
-
-    // Pipeline layout 管线布局
-    // 告诉pipeline，shader会从外部接收哪些数据。
-    // 比如vertex shader需要MVP，fragment shader需要纹理采样器读贴图。它们是通过uniform/desciptor set传入的。
-    // 管线布局描述了这些uniform和descriptor set的接口: 有几组数据、每组里面有什么、绑定在哪个位置
-
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;                 // Optional
-    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout; // Optional
-    pipelineLayoutInfo.pushConstantRangeCount = 0;         // Optional
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;      // Optional
-    if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+    VkPipelineVertexInputStateCreateInfo vertexInput{};
+    vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    if (config.useVertexInput)
     {
-        throw std::runtime_error("failed to create pipeline layout!");
+        vertexInput.vertexBindingDescriptionCount = 1;
+        vertexInput.pVertexBindingDescriptions = &bindingDescription;
+        vertexInput.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInput.pVertexAttributeDescriptions = attributeDescriptions.data();
     }
-    mainDeletionQueue.pushFunction([this, layout = pipelineLayout]() mutable {
-        vkDestroyPipelineLayout(device, layout, nullptr);
-    });
 
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+    VkPipelineViewportStateCreateInfo viewportState{};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 1;
+    viewportState.scissorCount = 1;
+
+    VkPipelineRasterizationStateCreateInfo rasterizer{};
+    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizer.depthClampEnable = VK_FALSE;
+    rasterizer.rasterizerDiscardEnable = VK_FALSE;
+    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizer.lineWidth = 1.0f;
+    rasterizer.cullMode = config.cullMode;
+    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterizer.depthBiasEnable = VK_FALSE;
+
+    VkPipelineMultisampleStateCreateInfo multisampling{};
+    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampling.sampleShadingEnable = VK_FALSE;
+    multisampling.rasterizationSamples = msaaSamples;
+
+    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachment.blendEnable = VK_FALSE;
+
+    VkPipelineColorBlendStateCreateInfo colorBlending{};
+    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlending.logicOpEnable = VK_FALSE;
+    colorBlending.attachmentCount = 1;
+    colorBlending.pAttachments = &colorBlendAttachment;
+
+    if (pipelineLayout == VK_NULL_HANDLE)
+    {
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+
+        if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create pipeline layout!");
+        }
+
+        mainDeletionQueue.pushFunction([this, layout = pipelineLayout]() mutable {
+            vkDestroyPipelineLayout(device, layout, nullptr);
+        });
+    }
 
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencil.depthTestEnable = VK_TRUE;
-    depthStencil.depthWriteEnable = VK_TRUE;
-    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS; // 新 fragment 的深度更小，更小的 <保留>
-
-    // 用于保留落在指定深度范围内的片段。不启用此功能
+    depthStencil.depthTestEnable = config.depthTest ? VK_TRUE : VK_FALSE;
+    depthStencil.depthWriteEnable = config.depthWrite ? VK_TRUE : VK_FALSE;
+    depthStencil.depthCompareOp = config.depthCompareOp;
     depthStencil.depthBoundsTestEnable = VK_FALSE;
-    depthStencil.minDepthBounds = 0.0f;
-    depthStencil.maxDepthBounds = 1.0f;
-
-    // 用于配置模板缓冲区操作
     depthStencil.stencilTestEnable = VK_FALSE;
-    depthStencil.front = {};
-    depthStencil.back = {};
 
-    // 最终的管线的创建
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    // 两个着色阶段：顶点着色器和片段着色器
-    pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = shaderStages;
-    pipelineInfo.pVertexInputState = &vertexInputInfo;
-    pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
-    pipelineInfo.pViewportState = &viewportStateInfo;
-    pipelineInfo.pRasterizationState = &rasterizerInfo;
-    pipelineInfo.pMultisampleState = &multisamplingInfo;
-    pipelineInfo.pDepthStencilState = nullptr; // Optional
-    pipelineInfo.pColorBlendState = &colorBlendingInfo;
-    pipelineInfo.pDynamicState = &dynamicStatesInfo; // Optional
-
+    pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+    pipelineInfo.pStages = shaderStages.data();
+    pipelineInfo.pVertexInputState = &vertexInput;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pViewportState = &viewportState;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = &depthStencil;
+    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = pipelineLayout;
     pipelineInfo.renderPass = renderPass;
-    pipelineInfo.subpass = 0; // 指定这个管线将在哪个subpass里使用。当前只有一个subpass，所以直接设置为0
-
-    // 如果要创建的新管线和某个已有管线大部分配置都相同，Vulkan允许从已有管线派生新管线，驱动可能会因此优化创建速度和运行时切换开销
-    // * basePipelineHandle: 传入一个已经创建好的管线对象的handle，表示“要基于这条管线派生”
-    // * basePipelineIndex: 当一次性批量创建多条管线时(vkCreateGraphicsPipelines支持传入数组)，可以用数组下标引用同批次中的另一条管线作为父管线
-    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // No other pipelines to derive from
+    pipelineInfo.subpass = 0;
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.basePipelineIndex = -1;
 
-    pipelineInfo.pDepthStencilState = &depthStencil;
-
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
+    VkPipeline pipeline = VK_NULL_HANDLE;
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS)
     {
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(device, vertShaderModule, nullptr);
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
-    mainDeletionQueue.pushFunction([this, pipeline = graphicsPipeline]() mutable {
-        vkDestroyPipeline(device, pipeline, nullptr);
-    });
-
-    // ------------------------------------------------------------------------------
-    // 清理阶段，销毁着色器模块
     vkDestroyShaderModule(device, fragShaderModule, nullptr);
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
+
+    return pipeline;
 }
 
 void TriangleApplication::createFramebuffers()

@@ -91,8 +91,6 @@ void TriangleApplication::recordCommandBuffer(VkCommandBuffer commandBuffer, uin
     // * VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS: 渲染通道命令将从次级命令缓冲区中获取
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline); // 绑定管线对象，告诉vulkan后续的绘制命令要使用哪个管线
-
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -106,6 +104,12 @@ void TriangleApplication::recordCommandBuffer(VkCommandBuffer commandBuffer, uin
     scissor.offset = {0, 0};
     scissor.extent = swapChainExtent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxPipeline);
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &skyboxDescriptorSets[currentFrame], 0, nullptr);
+    vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline); // 绑定管线对象，告诉vulkan后续的绘制命令要使用哪个管线
 
     VkBuffer vertexBuffers[] = {vertexBuffer.buffer};
     VkDeviceSize offsets[] = {0};

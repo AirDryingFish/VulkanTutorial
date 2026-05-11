@@ -51,6 +51,7 @@ void TriangleApplication::InitVulkan()
     createRenderPass();
     createDescriptorSetLayout();
     createGraphicsPipeline();
+    createSkyboxPipeline();
 
     createCommandPool();
     createColorResources();
@@ -63,6 +64,8 @@ void TriangleApplication::InitVulkan()
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
+    createSkyboxImage();
+    createSkyboxSampler();
 
     loadModel();
 
@@ -72,6 +75,7 @@ void TriangleApplication::InitVulkan()
 
     createDescriptorPool();
     createDescriptorSets();
+    createSkyboxDescriptorSets();
 
     createCommandBuffers();
     createSyncObjects();

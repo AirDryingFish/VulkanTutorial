@@ -60,6 +60,17 @@ private:
     VkShaderModule createShaderModule(const std::vector<char> &code);
     void createDescriptorSetLayout();
     void createGraphicsPipeline();
+    struct GraphicsPipelineConfig
+    {
+        std::string vertShaderPath;
+        std::string fragShaderPath;
+        bool useVertexInput = true;
+        VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT;
+        bool depthTest = true;
+        bool depthWrite = true;
+        VkCompareOp depthCompareOp = VK_COMPARE_OP_LESS;
+    };
+    VkPipeline createGraphicsPipelineFromConfig(const GraphicsPipelineConfig &config);
     void createFramebuffers();
 
     void createCommandPool();
@@ -89,10 +100,19 @@ private:
 
     void createDescriptorPool();
     void createDescriptorSets();
+    void createTextureDescriptorSets(
+        VkImageView imageView,
+        VkSampler sampler,
+        std::vector<VkDescriptorSet> &targetDescriptorSets);
 
     void createTextureImage();
     void createTextureImageView();
     void createTextureSampler();
+
+    void createSkyboxImage();
+    void createSkyboxSampler();
+    void createSkyboxPipeline();
+    void createSkyboxDescriptorSets();
 
     AllocatedImage createImage(
         uint32_t width,
@@ -102,14 +122,18 @@ private:
         VkFormat format,
         VkImageTiling tiling,
         VkImageUsageFlags usage,
-        VkMemoryPropertyFlags properties);
+        VkMemoryPropertyFlags properties,
+        uint32_t arrayLayers = 1,
+        VkImageCreateFlags flags = 0);
 
     VkImageView createImageView(
         VkImage image,
         VkFormat format,
         uint32_t mipLevels,
-        VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
-    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
+        VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT,
+        VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D,
+        uint32_t layerCount = 1);
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, uint32_t layerCount = 1);
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
     void generateMipmaps(VkImage image, VkFormat imageFormat, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels);
 
@@ -238,4 +262,10 @@ private:
     float modelAutoRotation = 0.0f;
     float modelAutoRotateSpeed = 90.0f;
     glm::vec4 clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    // skybox member
+    AllocatedImage skyboxImage;
+    VkSampler skyboxSampler = VK_NULL_HANDLE;
+    VkPipeline skyboxPipeline = VK_NULL_HANDLE;
+    std::vector<VkDescriptorSet> skyboxDescriptorSets;
 };
