@@ -1,0 +1,27 @@
+#pragma once
+
+#include "VulkanHeaders.hpp"
+
+#include <cstdint>
+#include <string>
+#include <vector>
+
+inline constexpr uint32_t WIDTH = 800;
+inline constexpr uint32_t HEIGHT = 600;
+
+inline const std::string MODEL_PATH = "../models/viking_room.obj";
+inline const std::string TEXTURE_PATH = "../textures/viking_room.png";
+
+inline constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
+inline const std::vector<const char *> validationLayers = {
+    "VK_LAYER_KHRONOS_validation"};
+
+inline const std::vector<const char *> deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
+#ifdef NDEBUG
+inline constexpr bool enableValidationLayers = false;
+#else
+inline constexpr bool enableValidationLayers = true;
+#endif
