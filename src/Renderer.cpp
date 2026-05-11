@@ -32,6 +32,18 @@ void TriangleApplication::createSyncObjects()
             throw std::runtime_error("failed to create semaphores!");
         }
     }
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        VkSemaphore imageAvailable = imageAvailableSemaphores[i];
+        VkSemaphore renderFinished = renderFinishedSemaphores[i];
+        VkFence fence = inFlightFences[i];
+        mainDeletionQueue.pushFunction([this, imageAvailable, renderFinished, fence](){
+            vkDestroySemaphore(device, imageAvailable, nullptr);
+            vkDestroySemaphore(device, renderFinished, nullptr);
+            vkDestroyFence(device, fence, nullptr);
+        });
+    }
 }
 
 void TriangleApplication::drawFrame()

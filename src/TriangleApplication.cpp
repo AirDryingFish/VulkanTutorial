@@ -86,54 +86,7 @@ void TriangleApplication::MainLoop()
 void TriangleApplication::Cleanup()
 {
     cleanupSwapChain();
-
-    vkDestroySampler(device, textureSampler, nullptr);
-    // vkDestroyImageView(device, textureImage.imageView, nullptr);
-
-    // // vkDestroyImage(device, textureImage, nullptr);
-    // // vkFreeMemory(device, textureImageMemory, nullptr);
-    // vmaDestroyImage(allocator, textureImage.image, textureImage.allocation);
-    destroyImage(textureImage);
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-    {
-        // vkDestroyBuffer(device, uniformBuffers[i], nullptr);
-        // vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
-        vmaUnmapMemory(allocator, uniformBuffers[i].allocation);
-        // vmaDestroyBuffer(allocator, uniformBuffers[i].buffer, uniformBuffers[i].allocation);
-        destroyBuffer(uniformBuffers[i]);
-    }
-
-    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-
-    // vkDestroyBuffer(device, indexBuffer, nullptr);
-    // vkFreeMemory(device, indexBufferMemory, nullptr);
-
-    // vkDestroyBuffer(device, vertexBuffer, nullptr);
-    // vkFreeMemory(device, vertexBufferMemory, nullptr);
-
-    // vmaDestroyBuffer(allocator, indexBuffer.buffer, indexBuffer.allocation);
-    // vmaDestroyBuffer(allocator, vertexBuffer.buffer, vertexBuffer.allocation);
-    destroyBuffer(indexBuffer);
-    destroyBuffer(vertexBuffer);
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-    {
-        vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
-        vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
-        vkDestroyFence(device, inFlightFences[i], nullptr);
-    }
-
-    vkDestroyCommandPool(device, commandPool, nullptr);
-    // for (auto framebuffer : swapChainFramebuffers)
-    // {
-    //     vkDestroyFramebuffer(device, framebuffer, nullptr);
-    // }
-
-    vkDestroyPipeline(device, graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-    vkDestroyRenderPass(device, renderPass, nullptr);
+    mainDeletionQueue.flush();
     vmaDestroyAllocator(allocator);
     vkDestroyDevice(device, nullptr);
     if (enableValidationLayers)

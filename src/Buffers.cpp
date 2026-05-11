@@ -79,15 +79,15 @@ AllocatedBuffer TriangleApplication::createBuffer(VkDeviceSize size,
 
 void TriangleApplication::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-
-    VkBufferCopy copyRegion{};
-    copyRegion.srcOffset = 0; // Optional
-    copyRegion.dstOffset = 0; // Optional
-    copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-    endSingleTimeCommands(commandBuffer);
+    // VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+    immediateSubmit([&](VkCommandBuffer commandBuffer){
+        VkBufferCopy copyRegion{};
+        copyRegion.srcOffset = 0; // Optional
+        copyRegion.dstOffset = 0; // Optional
+        copyRegion.size = size;
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+    });
+    // endSingleTimeCommands(commandBuffer);
 }
 
 void TriangleApplication::createIndexBuffer()
@@ -106,6 +106,10 @@ void TriangleApplication::createIndexBuffer()
     vmaUnmapMemory(allocator, stagingBuffer.allocation);
 
     indexBuffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mainDeletionQueue.pushFunction([this, buffer = indexBuffer]() mutable{
+        destroyBuffer(indexBuffer);
+    });
+
     copyBuffer(stagingBuffer.buffer, indexBuffer.buffer, bufferSize);
 
     // vkDestroyBuffer(device, stagingBuffer, nullptr);
@@ -128,6 +132,9 @@ void TriangleApplication::createVertexBuffer()
     vmaUnmapMemory(allocator, stagingBuffer.allocation);
 
     vertexBuffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mainDeletionQueue.pushFunction([this, buffer = vertexBuffer]() mutable {
+        destroyBuffer(vertexBuffer);
+    });
 
     copyBuffer(stagingBuffer.buffer, vertexBuffer.buffer, bufferSize);
     // vkDestroyBuffer(device, stagingBuffer, nullptr);
@@ -148,24 +155,28 @@ void TriangleApplication::createUniformBuffer()
         uniformBuffers[i] = createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         // vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBufferMapped[i]);
         vmaMapMemory(allocator, uniformBuffers[i].allocation, &uniformBufferMapped[i]);
+        mainDeletionQueue.pushFunction([this, i](){
+            vmaUnmapMemory(allocator, uniformBuffers[i].allocation);
+            destroyBuffer(uniformBuffers[i]);
+        });
     }
 }
 
-uint32_t TriangleApplication::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
-{
-    VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-    {
-        // typeFilter & (1 << i): 检查第i种内存类型是否在缓冲区支持的类型里（由第一步的memoryTypeBits决定）
-        // memProperties.memoryTypes[i].propertyFlags & properties: 检查第i种内存类型是否具有我们需要的属性（比如HOST_VISIBLE和HOST_COHERENT）
-        if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-        {
-            return i;
-        }
-    }
-    throw std::runtime_error("failed to find suitable memory type!");
-}
+// uint32_t TriangleApplication::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+// {
+//     VkPhysicalDeviceMemoryProperties memProperties;
+//     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+//     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+//     {
+//         // typeFilter & (1 << i): 检查第i种内存类型是否在缓冲区支持的类型里（由第一步的memoryTypeBits决定）
+//         // memProperties.memoryTypes[i].propertyFlags & properties: 检查第i种内存类型是否具有我们需要的属性（比如HOST_VISIBLE和HOST_COHERENT）
+//         if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+//         {
+//             return i;
+//         }
+//     }
+//     throw std::runtime_error("failed to find suitable memory type!");
+// }
 
 void TriangleApplication::updateUniformBuffer(uint32_t currentImage)
 {

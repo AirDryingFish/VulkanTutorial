@@ -2,6 +2,7 @@
 
 #include "AppConfig.hpp"
 #include "VulkanTypes.hpp"
+#include "DeletionQueue.hpp"
 
 #include <string>
 #include <vector>
@@ -57,8 +58,14 @@ private:
     void createCommandPool();
     void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+    void immediateSubmit(std::function<void(VkCommandBuffer cmd)> &&function);
+    
+
+    
 
     // void createBuffer(
     //     VkDeviceSize size,
@@ -79,7 +86,7 @@ private:
         VkMemoryPropertyFlags properties);
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    // uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     void loadModel();
     void createVertexBuffer();
@@ -216,6 +223,9 @@ private:
     // // VkDeviceMemory colorImageMemory;
     // VmaAllocation colorImageAllocation = nullptr;
     // VkImageView colorImageView;
+
+    DeletionQueue mainDeletionQueue;
+    DeletionQueue swapChainDeletionQueue;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;

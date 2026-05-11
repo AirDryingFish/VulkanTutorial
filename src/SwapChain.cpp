@@ -188,30 +188,30 @@ void TriangleApplication::framebufferRizeCallback(GLFWwindow *window, int width,
 
 void TriangleApplication::cleanupSwapChain()
 {
-    for (auto framebuffer : swapChainFramebuffers)
-    {
-        vkDestroyFramebuffer(device, framebuffer, nullptr);
-    }
+    // for (auto framebuffer : swapChainFramebuffers)
+    // {
+    //     vkDestroyFramebuffer(device, framebuffer, nullptr);
+    // }
 
     // vkDestroyImageView(device, depthImage.imageView, nullptr);
     // // vkDestroyImage(device, depthImage, nullptr);
     // // vkFreeMemory(device, depthImageMemory, nullptr);
     // vmaDestroyImage(allocator, depthImage.image, depthImage.allocation);
-    
 
     // vkDestroyImageView(device, colorImage.imageView, nullptr);
     // // vkDestroyImage(device, colorImage, nullptr);
     // // vkFreeMemory(device, colorImageMemory, nullptr);
     // vmaDestroyImage(allocator, colorImage.image, colorImage.allocation);
-    destroyImage(depthImage);
-    destroyImage(colorImage);
+    // destroyImage(depthImage);
+    // destroyImage(colorImage);
 
-    for (auto imageView : swapChainImageViews)
-    {
-        vkDestroyImageView(device, imageView, nullptr);
-    }
-
+    // for (auto imageView : swapChainImageViews)
+    // {
+    //     vkDestroyImageView(device, imageView, nullptr);
+    // }
+    swapChainDeletionQueue.flush();
     vkDestroySwapchainKHR(device, swapChain, nullptr);
+    swapChain = VK_NULL_HANDLE;
 }
 
 void TriangleApplication::createImageViews()
@@ -251,5 +251,9 @@ void TriangleApplication::createImageViews()
         //     throw std::runtime_error("failed to create image views!");
         // }
         swapChainImageViews[i] = createImageView(swapChainImages[i], swapChainImageFormat, 1);
+
+        swapChainDeletionQueue.pushFunction([this, imageView = swapChainImageViews[i]](){ 
+            vkDestroyImageView(device, imageView, nullptr); 
+        });
     }
 }

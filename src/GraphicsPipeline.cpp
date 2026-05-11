@@ -135,6 +135,9 @@ void TriangleApplication::createRenderPass()
     {
         throw std::runtime_error("failed to create render pass!");
     }
+    mainDeletionQueue.pushFunction([this, rnderPass = renderPass]() mutable{
+        vkDestroyRenderPass(device, renderPass, nullptr);
+    });
 }
 
 std::vector<char> TriangleApplication::readFile(const std::string &filename)
@@ -206,6 +209,9 @@ void TriangleApplication::createDescriptorSetLayout()
     {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
+    mainDeletionQueue.pushFunction([this, layout = descriptorSetLayout]() mutable {
+        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+    });
 }
 
 void TriangleApplication::createGraphicsPipeline()
@@ -375,6 +381,10 @@ void TriangleApplication::createGraphicsPipeline()
     {
         throw std::runtime_error("failed to create pipeline layout!");
     }
+    mainDeletionQueue.pushFunction([this, layout = pipelineLayout]() mutable {
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+    });
+
 
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -424,6 +434,10 @@ void TriangleApplication::createGraphicsPipeline()
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
+    mainDeletionQueue.pushFunction([this, pipeline = graphicsPipeline]() mutable {
+        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+    });
+
     // ------------------------------------------------------------------------------
     // 清理阶段，销毁着色器模块
     vkDestroyShaderModule(device, fragShaderModule, nullptr);
@@ -459,5 +473,9 @@ void TriangleApplication::createFramebuffers()
         {
             throw std::runtime_error("failed to create framebuffer!");
         }
+
+        swapChainDeletionQueue.pushFunction([this, frameBuffer = swapChainFramebuffers[i]]() {
+            vkDestroyFramebuffer(device, frameBuffer, nullptr);
+        });
     }
 }

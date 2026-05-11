@@ -32,6 +32,9 @@ void TriangleApplication::createDescriptorPool()
     {
         throw std::runtime_error("failed to create descriptor pool!");
     }
+    mainDeletionQueue.pushFunction([this, pool = descriptorPool]() mutable {
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    });
 }
 
 void TriangleApplication::createDescriptorSets()
