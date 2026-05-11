@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -10,6 +11,19 @@
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
+
+glm::mat4 TriangleApplication::getModelMatrix() const
+{
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), modelPosition);
+
+    model = glm::rotate(model, glm::radians(modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(modelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(modelRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::rotate(model, glm::radians(modelAutoRotation), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    model = glm::scale(model, modelScale);
+    return model;
+}
 
 AllocatedBuffer TriangleApplication::createBuffer(VkDeviceSize size,
                                                   VkBufferUsageFlags usage,
@@ -65,7 +79,7 @@ void TriangleApplication::createIndexBuffer()
 
     indexBuffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     mainDeletionQueue.pushFunction([this, buffer = indexBuffer]() mutable {
-        destroyBuffer(indexBuffer);
+        destroyBuffer(buffer);
     });
 
     copyBuffer(stagingBuffer.buffer, indexBuffer.buffer, bufferSize);
@@ -84,7 +98,7 @@ void TriangleApplication::createVertexBuffer()
 
     vertexBuffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     mainDeletionQueue.pushFunction([this, buffer = vertexBuffer]() mutable {
-        destroyBuffer(vertexBuffer);
+        destroyBuffer(buffer);
     });
 
     copyBuffer(stagingBuffer.buffer, vertexBuffer.buffer, bufferSize);
@@ -108,16 +122,21 @@ void TriangleApplication::createUniformBuffer()
     }
 }
 
-void TriangleApplication::updateUniformBuffer(uint32_t currentImage)
+void TriangleApplication::updateUniformBuffer(uint32_t currentImage, float deltaTime)
 {
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+    if (rotateModel)
+    {
+        modelAutoRotation += modelAutoRotateSpeed * deltaTime;
+        if (modelAutoRotation > 360.0f || modelAutoRotation < -360.0f)
+        {
+            modelAutoRotation = std::fmod(modelAutoRotation, 360.0f);
+        }
+    }
 
     UniformBufferObject ubo{};
-    ubo.model = glm::mat4(1.0f);
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / static_cast<float>(swapChainExtent.height), 0.1f, 10.0f);
+    ubo.model = getModelMatrix();
+    ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / static_cast<float>(swapChainExtent.height), cameraNear, cameraFar);
     ubo.proj[1][1] *= -1;
 
     memcpy(uniformBufferMapped[currentFrame], &ubo, sizeof(ubo));

@@ -169,6 +169,15 @@ void TriangleApplication::framebufferRizeCallback(GLFWwindow *window, int width,
     app->framebufferResized = true;
 }
 
+void TriangleApplication::windowRefreshCallback(GLFWwindow *window)
+{
+    auto app = reinterpret_cast<TriangleApplication *>(glfwGetWindowUserPointer(window));
+    if (app != nullptr && app->rendererReady && !app->frameInProgress)
+    {
+        app->drawFrame();
+    }
+}
+
 void TriangleApplication::cleanupSwapChain()
 {
     swapChainDeletionQueue.flush();

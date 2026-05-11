@@ -19,6 +19,10 @@ private:
     void InitWindow();
     void InitVulkan();
 
+    void initImGui();
+    void drawImGui();
+    void drawTransformGizmo();
+
     void CreateInstance();
     void setupDebugMessenger();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
@@ -46,6 +50,8 @@ private:
     void createSwapChain();
     void recreateSwapChain();
     static void framebufferRizeCallback(GLFWwindow *window, int width, int height);
+    static void windowRefreshCallback(GLFWwindow *window);
+    static void scrollCallback(GLFWwindow *window, double xoffset, double yoffset);
     void cleanupSwapChain();
     void createImageViews();
 
@@ -72,10 +78,14 @@ private:
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
     void loadModel();
+    void computeModelBounds();
     void createVertexBuffer();
     void createIndexBuffer();
     void createUniformBuffer();
-    void updateUniformBuffer(uint32_t currentImage);
+    void updateUniformBuffer(uint32_t currentImage, float deltaTime);
+    void processCameraInput(float deltaTime);
+    void processModelPicking();
+    glm::mat4 getModelMatrix() const;
 
     void createDescriptorPool();
     void createDescriptorSets();
@@ -129,6 +139,8 @@ private:
     VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
     VkSurfaceKHR surface = VK_NULL_HANDLE;
 
+    VkDescriptorPool imguiDescriptorPool = VK_NULL_HANDLE;
+
     VmaAllocator allocator = nullptr;
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -153,6 +165,19 @@ private:
 
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
+    glm::vec3 modelLocalBoundsMin = {0.0f, 0.0f, 0.0f};
+    glm::vec3 modelLocalBoundsMax = {0.0f, 0.0f, 0.0f};
+    bool modelBoundsValid = false;
+    bool selectedModel = false;
+    bool leftMouseWasDown = false;
+    float modelPickDistance = 0.0f;
+    int gizmoHoveredAxis = 0;
+    int gizmoActiveAxis = 0;
+    glm::vec2 gizmoDragStartMouse = {0.0f, 0.0f};
+    glm::vec3 gizmoDragStartPosition = {0.0f, 0.0f, 0.0f};
+    glm::vec3 gizmoDragAxis = {0.0f, 0.0f, 0.0f};
+    glm::vec3 gizmoDragPlaneNormal = {0.0f, 0.0f, 0.0f};
+    glm::vec3 gizmoDragStartHitPoint = {0.0f, 0.0f, 0.0f};
     AllocatedBuffer vertexBuffer;
     AllocatedBuffer indexBuffer;
 
@@ -179,6 +204,38 @@ private:
 
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
+    bool rendererReady = false;
+    bool frameInProgress = false;
     bool framebufferResized = false;
     uint32_t currentFrame = 0;
+
+    // camera-related params
+    glm::vec3 cameraPos = {2.0f, 2.0f, 2.0f};
+    glm::vec3 cameraTarget = {0.0f, 0.0f, 0.0f};
+    glm::vec3 cameraFront = {-0.577350f, -0.577350f, -0.577350f};
+    glm::vec3 cameraUp = {0.0f, 0.0f, 1.0f};
+    float cameraYaw = -135.0f;
+    float cameraPitch = -35.264f;
+    float cameraNear = 0.1f;
+    float cameraFar = 1000.0f;
+    float cameraMoveSpeed = 3.0f;
+    float cameraFastMultiplier = 3.0f;
+    float cameraScrollSpeed = 1.0f;
+    float cameraPanSpeed = 0.01f;
+    float mouseSensitivity = 0.12f;
+    float cameraScrollOffset = 0.0f;
+    float lastMouseX = 0.0f;
+    float lastMouseY = 0.0f;
+    float lastFrameTime = 0.0f;
+    bool firstMouse = true;
+    int cameraControlMode = 0;
+
+    bool rotateModel = false;
+    bool showDemoWindow = false;
+    glm::vec3 modelPosition = {0.0f, 0.0f, 0.0f};
+    glm::vec3 modelRotation = {0.0f, 0.0f, 0.0f};
+    glm::vec3 modelScale = {1.0f, 1.0f, 1.0f};
+    float modelAutoRotation = 0.0f;
+    float modelAutoRotateSpeed = 90.0f;
+    glm::vec4 clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
 };

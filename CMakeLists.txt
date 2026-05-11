@@ -11,16 +11,19 @@ find_package(glm CONFIG REQUIRED)
 find_package(Stb REQUIRED)  
 find_package(tinyobjloader CONFIG REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_executable(vulkan
     main.cpp
     src/Buffers.cpp
+    src/Camera.cpp
     src/CommandBuffers.cpp
     src/DebugUtils.cpp
     src/Descriptors.cpp
     src/GraphicsPipeline.cpp
     src/ImageResources.cpp
     src/Model.cpp
+    src/Picking.cpp
     src/Renderer.cpp
     src/SwapChain.cpp
     src/TriangleApplication.cpp
@@ -28,6 +31,7 @@ add_executable(vulkan
     src/VulkanInstance.cpp
     src/VmaImplimentation.cpp
     src/VulkanAllocator.cpp
+    src/ImGuiLayer.cpp
 )
 
 target_include_directories(vulkan PRIVATE
@@ -41,4 +45,5 @@ target_link_libraries(vulkan PRIVATE
     glm::glm
     tinyobjloader::tinyobjloader 
     GPUOpen::VulkanMemoryAllocator
+    imgui::imgui
 )

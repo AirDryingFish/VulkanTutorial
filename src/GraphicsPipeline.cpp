@@ -135,8 +135,8 @@ void TriangleApplication::createRenderPass()
     {
         throw std::runtime_error("failed to create render pass!");
     }
-    mainDeletionQueue.pushFunction([this, rnderPass = renderPass]() mutable{
-        vkDestroyRenderPass(device, renderPass, nullptr);
+    mainDeletionQueue.pushFunction([this, capturedRenderPass = renderPass]() mutable{
+        vkDestroyRenderPass(device, capturedRenderPass, nullptr);
     });
 }
 
@@ -210,7 +210,7 @@ void TriangleApplication::createDescriptorSetLayout()
         throw std::runtime_error("failed to create descriptor set layout!");
     }
     mainDeletionQueue.pushFunction([this, layout = descriptorSetLayout]() mutable {
-        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+        vkDestroyDescriptorSetLayout(device, layout, nullptr);
     });
 }
 
@@ -382,7 +382,7 @@ void TriangleApplication::createGraphicsPipeline()
         throw std::runtime_error("failed to create pipeline layout!");
     }
     mainDeletionQueue.pushFunction([this, layout = pipelineLayout]() mutable {
-        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        vkDestroyPipelineLayout(device, layout, nullptr);
     });
 
 
@@ -435,7 +435,7 @@ void TriangleApplication::createGraphicsPipeline()
     }
 
     mainDeletionQueue.pushFunction([this, pipeline = graphicsPipeline]() mutable {
-        vkDestroyPipeline(device, graphicsPipeline, nullptr);
+        vkDestroyPipeline(device, pipeline, nullptr);
     });
 
     // ------------------------------------------------------------------------------

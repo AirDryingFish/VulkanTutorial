@@ -53,4 +53,6 @@ void TriangleApplication::loadModel()
             indices.push_back(uniqueVertices[vertex]);
         }
     }
+
+    computeModelBounds();
 }

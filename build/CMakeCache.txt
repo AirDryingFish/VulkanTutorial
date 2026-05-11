@@ -213,8 +213,8 @@ CMAKE_STRIP:FILEPATH=E:/mingw64/bin/strip.exe
 //Path to a program.
 CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 
-//No help, variable specified on the command line.
-CMAKE_TOOLCHAIN_FILE:UNINITIALIZED=E:/vcpkg/scripts/buildsystems/vcpkg.cmake
+//The CMake toolchain file
+CMAKE_TOOLCHAIN_FILE:FILEPATH=E:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 //If this value is on, makefiles will be generated without the
 // .SILENT directive, and all commands will be echoed to the console
@@ -266,10 +266,10 @@ Vulkan_GLSLANG_VALIDATOR_EXECUTABLE:FILEPATH=C:/VulkanSDK/1.4.341.1/Bin/glslangV
 Vulkan_GLSLC_EXECUTABLE:FILEPATH=C:/VulkanSDK/1.4.341.1/Bin/glslc.exe
 
 //Path to a file.
-Vulkan_INCLUDE_DIR:PATH=C:/VulkanSDK/1.4.341.1/include
+Vulkan_INCLUDE_DIR:PATH=E:/vcpkg/installed/x64-windows/include
 
 //Path to a library.
-Vulkan_LIBRARY:FILEPATH=C:/VulkanSDK/1.4.341.1/Lib/vulkan-1.lib
+Vulkan_LIBRARY:FILEPATH=E:/vcpkg/installed/x64-windows/debug/lib/vulkan-1.lib
 
 //(experimental) Automatically copy dependencies into the install
 // target directory for executables. Requires CMake 3.14.
@@ -294,6 +294,9 @@ glfw3_DIR:PATH=E:/vcpkg/installed/x64-windows/share/glfw3
 
 //The directory containing a CMake configuration file for glm.
 glm_DIR:PATH=E:/vcpkg/installed/x64-windows/share/glm
+
+//The directory containing a CMake configuration file for imgui.
+imgui_DIR:PATH=E:/vcpkg/installed/x64-windows/share/imgui
 
 //The directory containing a CMake configuration file for tinyobjloader.
 tinyobjloader_DIR:PATH=E:/vcpkg/installed/x64-windows/share/tinyobjloader
@@ -463,7 +466,7 @@ FIND_PACKAGE_MESSAGE_DETAILS_Stb:INTERNAL=[E:/vcpkg/installed/x64-windows/includ
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //Details about finding Vulkan
-FIND_PACKAGE_MESSAGE_DETAILS_Vulkan:INTERNAL=[C:/VulkanSDK/1.4.341.1/Lib/vulkan-1.lib][C:/VulkanSDK/1.4.341.1/include][found components: glslc glslangValidator ][v1.4.341()]
+FIND_PACKAGE_MESSAGE_DETAILS_Vulkan:INTERNAL=[E:/vcpkg/installed/x64-windows/debug/lib/vulkan-1.lib][E:/vcpkg/installed/x64-windows/include][found components: glslc glslangValidator ][v1.4.341()]
 //ADVANCED property for variable: Stb_INCLUDE_DIR
 Stb_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //Install the dependencies listed in your manifest:

@@ -30,6 +30,8 @@ void TriangleApplication::InitWindow()
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebufferRizeCallback);
+    glfwSetWindowRefreshCallback(window, windowRefreshCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 }
 
 void TriangleApplication::InitVulkan()
@@ -56,6 +58,8 @@ void TriangleApplication::InitVulkan()
 
     createFramebuffers();
 
+    initImGui();
+
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
@@ -71,6 +75,8 @@ void TriangleApplication::InitVulkan()
 
     createCommandBuffers();
     createSyncObjects();
+
+    rendererReady = true;
 }
 
 void TriangleApplication::MainLoop()
@@ -85,6 +91,8 @@ void TriangleApplication::MainLoop()
 
 void TriangleApplication::Cleanup()
 {
+    rendererReady = false;
+
     cleanupSwapChain();
     mainDeletionQueue.flush();
     vmaDestroyAllocator(allocator);

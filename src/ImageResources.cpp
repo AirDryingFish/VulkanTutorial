@@ -216,8 +216,8 @@ VkImageView TriangleApplication::createImageView(VkImage image, VkFormat format,
 void TriangleApplication::createTextureImageView()
 {
     textureImage.imageView = createImageView(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
-    mainDeletionQueue.pushFunction([this, image = textureImage]() {
-        destroyImage(textureImage);
+    mainDeletionQueue.pushFunction([this, image = textureImage]() mutable {
+        destroyImage(image);
     });
 }
 

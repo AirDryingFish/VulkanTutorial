@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-inline constexpr uint32_t WIDTH = 800;
-inline constexpr uint32_t HEIGHT = 600;
+inline constexpr uint32_t WIDTH = 1920;
+inline constexpr uint32_t HEIGHT = 1080;
 
 inline const std::string MODEL_PATH = "../models/viking_room.obj";
 inline const std::string TEXTURE_PATH = "../textures/viking_room.png";

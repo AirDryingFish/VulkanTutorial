@@ -1,5 +1,8 @@
 #include "TriangleApplication.hpp"
 
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
+
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -27,7 +30,7 @@ void TriangleApplication::createCommandPool()
         throw std::runtime_error("failed to create command pool!");
     }
     mainDeletionQueue.pushFunction([this, pool = commandPool]() mutable
-                                   { vkDestroyCommandPool(device, commandPool, nullptr); });
+                                   { vkDestroyCommandPool(device, pool, nullptr); });
 }
 
 void TriangleApplication::createCommandBuffers()
@@ -76,7 +79,7 @@ void TriangleApplication::recordCommandBuffer(VkCommandBuffer commandBuffer, uin
 
     // VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}}; // 定义clear color，清空颜色缓冲区时会用到
     std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    clearValues[0].color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
     clearValues[1].depthStencil = {1.0f, 0};
     renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
@@ -119,6 +122,8 @@ void TriangleApplication::recordCommandBuffer(VkCommandBuffer commandBuffer, uin
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr); // 绑定描述符集，告诉vulkan后续的绘制命令要使用哪个描述符集来获取shader需要的外部数据（比如uniform buffer）
 
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0); // 画1个实例，每个实例3个顶点，从头开始画
+
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
     vkCmdEndRenderPass(commandBuffer);
 
