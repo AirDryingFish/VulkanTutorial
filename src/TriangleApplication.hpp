@@ -1,9 +1,10 @@
 #pragma once
 
 #include "AppConfig.hpp"
-#include "VulkanTypes.hpp"
 #include "DeletionQueue.hpp"
+#include "VulkanTypes.hpp"
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -59,26 +60,9 @@ private:
     void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
-
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
     void immediateSubmit(std::function<void(VkCommandBuffer cmd)> &&function);
-    
-
-    
-
-    // void createBuffer(
-    //     VkDeviceSize size,
-    //     VkBufferUsageFlags usage,
-    //     VkMemoryPropertyFlags properties,
-    //     VkBuffer &buffer,
-    //     VkDeviceMemory &bufferMemory);
-    // void createBuffer(
-    //     VkDeviceSize size,
-    //     VkBufferUsageFlags usage,
-    //     VkMemoryPropertyFlags properties,
-    //     VkBuffer &buffer,
-    //     VmaAllocation &allocation);
 
     AllocatedBuffer createBuffer(
         VkDeviceSize size,
@@ -86,7 +70,6 @@ private:
         VkMemoryPropertyFlags properties);
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-    // uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     void loadModel();
     void createVertexBuffer();
@@ -100,19 +83,6 @@ private:
     void createTextureImage();
     void createTextureImageView();
     void createTextureSampler();
-    // void createImage(
-    //     uint32_t width,
-    //     uint32_t height,
-    //     uint32_t mipLevels,
-    //     VkSampleCountFlagBits numSamples,
-    //     VkFormat format,
-    //     VkImageTiling tiling,
-    //     VkImageUsageFlags usage,
-    //     VkMemoryPropertyFlags properties,
-    //     VkImage &image,
-    //     // VkDeviceMemory &imageMemory
-    //     VmaAllocation &allocation
-    // );
 
     AllocatedImage createImage(
         uint32_t width,
@@ -183,20 +153,10 @@ private:
 
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
-    // VkBuffer vertexBuffer = VK_NULL_HANDLE;
-    // // VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
-    // VmaAllocation vertexBufferAllocation = nullptr;
-    // VkBuffer indexBuffer = VK_NULL_HANDLE;
-    // // VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
-    // VmaAllocation indexBufferAllocation = nullptr;
-
     AllocatedBuffer vertexBuffer;
     AllocatedBuffer indexBuffer;
 
-    // std::vector<VkBuffer> uniformBuffers;
     std::vector<AllocatedBuffer> uniformBuffers;
-    // std::vector<VkDeviceMemory> uniformBuffersMemory;
-    // std::vector<VmaAllocation> uniformBufferAllocations;
     std::vector<void *> uniformBufferMapped;
 
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
@@ -204,25 +164,11 @@ private:
 
     uint32_t mipLevels;
 
-    // VkImage textureImage = VK_NULL_HANDLE;
-    // // VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
-    // VmaAllocation textureImageAllocation = nullptr;
-    // VkImageView textureImageView = VK_NULL_HANDLE;
     AllocatedImage textureImage;
     VkSampler textureSampler = VK_NULL_HANDLE;
 
     AllocatedImage depthImage;
     AllocatedImage colorImage;
-
-    // VkImage depthImage = VK_NULL_HANDLE;
-    // // VkDeviceMemory depthImageMemory = VK_NULL_HANDLE;
-    // VmaAllocation depthImageAllocation = nullptr;
-    // VkImageView depthImageView = VK_NULL_HANDLE;
-
-    // VkImage colorImage;
-    // // VkDeviceMemory colorImageMemory;
-    // VmaAllocation colorImageAllocation = nullptr;
-    // VkImageView colorImageView;
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapChainDeletionQueue;

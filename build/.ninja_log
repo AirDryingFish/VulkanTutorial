@@ -41,3 +41,17 @@
 266	15306	8001907393926271	CMakeFiles/vulkan.dir/src/ImageResources.cpp.obj	361e36602084d124
 295	16612	8001907394220407	CMakeFiles/vulkan.dir/src/Model.cpp.obj	4b401fe515f822d5
 16612	21542	8001907557394394	vulkan.exe	f0754198f79c8254
+134	6386	8001916415389355	CMakeFiles/vulkan.dir/src/VulkanAllocator.cpp.obj	a9ddd70ec598a250
+107	6876	8001916415123495	CMakeFiles/vulkan.dir/src/TriangleApplication.cpp.obj	54097222646a3ead
+11	6999	8001916414164592	CMakeFiles/vulkan.dir/main.cpp.obj	100158269aeb609d
+125	7027	8001916415304200	CMakeFiles/vulkan.dir/src/VulkanInstance.cpp.obj	5f735dfdf7fa29e8
+32	7037	8001916414372188	CMakeFiles/vulkan.dir/src/CommandBuffers.cpp.obj	71a3fbdda43aa039
+41	7095	8001916414467440	CMakeFiles/vulkan.dir/src/Descriptors.cpp.obj	b13aedad5f5bc7a2
+85	7109	8001916414913157	CMakeFiles/vulkan.dir/src/Renderer.cpp.obj	906856cfa1c55067
+24	7215	8001916414297193	CMakeFiles/vulkan.dir/src/Buffers.cpp.obj	92bc102b686f5b54
+51	7260	8001916414567648	CMakeFiles/vulkan.dir/src/GraphicsPipeline.cpp.obj	6c80a4dfb9dab0cf
+116	7275	8001916415219056	CMakeFiles/vulkan.dir/src/VulkanDevice.cpp.obj	7e7d5ea5f241b8f3
+97	7276	8001916415028331	CMakeFiles/vulkan.dir/src/SwapChain.cpp.obj	5530324754303c4a
+61	7944	8001916414668716	CMakeFiles/vulkan.dir/src/ImageResources.cpp.obj	361e36602084d124
+73	8924	8001916414787954	CMakeFiles/vulkan.dir/src/Model.cpp.obj	4b401fe515f822d5
+8924	11666	8001916503303918	vulkan.exe	f0754198f79c8254
