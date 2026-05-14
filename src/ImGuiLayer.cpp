@@ -247,6 +247,7 @@ void TriangleApplication::initImGui()
 void TriangleApplication::drawImGui()
 {
     ImGuiIO &io = ImGui::GetIO();
+    sceneClickConsumed = false;
 
     ImGui::Text("FPS: %.1f", io.Framerate);
     ImGui::Text("Frame Time: %.3f ms", 1000.0f / io.Framerate);
@@ -266,33 +267,147 @@ void TriangleApplication::drawImGui()
     ImGui::DragFloat("Pan Speed", &cameraPanSpeed, 0.001f, 0.001f, 0.2f, "%.3f");
     ImGui::DragFloat("Mouse Sensitivity", &mouseSensitivity, 0.01f, 0.01f, 2.0f);
 
-    ImGui::SeparatorText("Model Transform");
-    ImGui::Text("Selected: %s", selectedModel ? "true" : "false");
-    if (selectedModel)
+    ImGui::SeparatorText("Scene");
+    auto addObject = [&](MeshSource source, const std::string &path = std::string()) {
+        try
+        {
+            addMeshObject(source, path);
+            sceneStatusMessage.clear();
+        }
+        catch (const std::exception &exception)
+        {
+            sceneStatusMessage = exception.what();
+        }
+        sceneClickConsumed = true;
+    };
+
+    if (ImGui::Button("Add Cube"))
+    {
+        addObject(MeshSource::Cube);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Add Sphere"))
+    {
+        addObject(MeshSource::Sphere);
+    }
+    ImGui::InputText("OBJ Path", importModelPath, sizeof(importModelPath));
+    if (ImGui::Button("Import OBJ"))
+    {
+        addObject(MeshSource::Obj, importModelPath);
+    }
+    if (!sceneStatusMessage.empty())
+    {
+        ImGui::TextWrapped("Import failed: %s", sceneStatusMessage.c_str());
+    }
+
+    ImGui::SeparatorText("Objects");
+    for (size_t i = 0; i < sceneObjects.size(); i++)
+    {
+        SceneObject &object = sceneObjects[i];
+        ImGui::PushID(static_cast<int>(i));
+        const bool selected = selectedObject == SceneSelection::Model && selectedSceneObjectIndex == static_cast<int>(i);
+        if (ImGui::Selectable(object.name.c_str(), selected))
+        {
+            selectedObject = SceneSelection::Model;
+            selectedSceneObjectIndex = static_cast<int>(i);
+            selectedModel = true;
+            selectedPointLightIndex = -1;
+            sceneClickConsumed = true;
+        }
+        ImGui::PopID();
+    }
+
+    SceneObject *selectedSceneObject = getSelectedSceneObject();
+
+    ImGui::SeparatorText("Object Transform");
+    ImGui::Text("Selected: %s", selectedSceneObject != nullptr ? selectedSceneObject->name.c_str() : "None");
+    if (selectedObject == SceneSelection::Model && selectedSceneObject != nullptr)
     {
         ImGui::Text("Pick Distance: %.3f", modelPickDistance);
+        ImGui::Checkbox("Auto Rotate", &selectedSceneObject->autoRotate);
+        ImGui::DragFloat("Auto Rotate Speed", &selectedSceneObject->autoRotateSpeed, 1.0f, -720.0f, 720.0f);
+        ImGui::DragFloat3("Position", &selectedSceneObject->position.x, 0.05f);
+        ImGui::DragFloat3("Rotation", &selectedSceneObject->rotation.x, 0.5f, -360.0f, 360.0f);
+        ImGui::DragFloat3("Scale", &selectedSceneObject->scale.x, 0.02f, 0.01f, 20.0f);
+        if (ImGui::Button("Reset Transform"))
+        {
+            selectedSceneObject->position = glm::vec3(0.0f);
+            selectedSceneObject->rotation = glm::vec3(0.0f);
+            selectedSceneObject->scale = glm::vec3(1.0f);
+            selectedSceneObject->autoRotation = 0.0f;
+        }
     }
-    ImGui::Checkbox("Auto Rotate", &rotateModel);
-    ImGui::DragFloat("Auto Rotate Speed", &modelAutoRotateSpeed, 1.0f, -720.0f, 720.0f);
-    ImGui::DragFloat3("Position", &modelPosition.x, 0.05f);
-    ImGui::DragFloat3("Rotation", &modelRotation.x, 0.5f, -360.0f, 360.0f);
-    ImGui::DragFloat3("Scale", &modelScale.x, 0.02f, 0.01f, 20.0f);
-    if (ImGui::Button("Reset Transform"))
+
+    ImGui::SeparatorText("Lights");
+    ImGui::ColorEdit3("Ambient Color", &ambientLightColor.x);
+    ImGui::DragFloat("Ambient Intensity", &ambientLightIntensity, 0.01f, 0.0f, 2.0f);
+
+    const bool canAddLight = pointLights.size() < MAX_POINT_LIGHTS;
+    if (!canAddLight)
     {
-        modelPosition = glm::vec3(0.0f);
-        modelRotation = glm::vec3(0.0f);
-        modelScale = glm::vec3(1.0f);
-        modelAutoRotation = 0.0f;
+        ImGui::BeginDisabled();
+    }
+    if (ImGui::Button("Add Light"))
+    {
+        PointLight light{};
+        light.position = cameraPos + cameraFront * 2.0f;
+        pointLights.push_back(light);
+        selectedObject = SceneSelection::PointLight;
+        selectedModel = false;
+        selectedSceneObjectIndex = -1;
+        selectedPointLightIndex = static_cast<int>(pointLights.size()) - 1;
+        sceneClickConsumed = true;
+    }
+    if (!canAddLight)
+    {
+        ImGui::EndDisabled();
+    }
+    ImGui::SameLine();
+    ImGui::Text("%zu / %u", pointLights.size(), MAX_POINT_LIGHTS);
+
+    for (size_t i = 0; i < pointLights.size(); i++)
+    {
+        PointLight &light = pointLights[i];
+        ImGui::PushID(static_cast<int>(i));
+
+        const bool selected = selectedObject == SceneSelection::PointLight && selectedPointLightIndex == static_cast<int>(i);
+        if (ImGui::Selectable("Point Light", selected))
+        {
+            selectedObject = SceneSelection::PointLight;
+            selectedModel = false;
+            selectedSceneObjectIndex = -1;
+            selectedPointLightIndex = static_cast<int>(i);
+            sceneClickConsumed = true;
+        }
+
+        ImGui::Checkbox("Enabled", &light.enabled);
+        ImGui::DragFloat3("Position", &light.position.x, 0.05f);
+        ImGui::ColorEdit3("Color", &light.color.x);
+        ImGui::DragFloat("Intensity", &light.intensity, 0.05f, 0.0f, 100.0f);
+        ImGui::DragFloat("Range", &light.range, 0.05f, 0.1f, 100.0f);
+
+        ImGui::Separator();
+        ImGui::PopID();
     }
 
     ImGui::SeparatorText("Resources");
 
-    ImGui::Text("Vertices: %zu", vertices.size());
-    ImGui::Text("Indices: %zu", indices.size());
-    ImGui::Text("AABB Min: %.2f %.2f %.2f", modelLocalBoundsMin.x, modelLocalBoundsMin.y, modelLocalBoundsMin.z);
-    ImGui::Text("AABB Max: %.2f %.2f %.2f", modelLocalBoundsMax.x, modelLocalBoundsMax.y, modelLocalBoundsMax.z);
+    ImGui::Text("Objects: %zu", sceneObjects.size());
+    if (selectedSceneObject != nullptr)
+    {
+        ImGui::Text("Vertices: %u", selectedSceneObject->vertexCount);
+        ImGui::Text("Indices: %u", selectedSceneObject->indexCount);
+        ImGui::Text("AABB Min: %.2f %.2f %.2f", selectedSceneObject->localBoundsMin.x, selectedSceneObject->localBoundsMin.y, selectedSceneObject->localBoundsMin.z);
+        ImGui::Text("AABB Max: %.2f %.2f %.2f", selectedSceneObject->localBoundsMax.x, selectedSceneObject->localBoundsMax.y, selectedSceneObject->localBoundsMax.z);
+    }
     ImGui::Text("Mip Levels: %u", mipLevels);
     ImGui::Text("Texture Image: 0x%p", (void *)textureImage.image);
+
+    ImGui::SeparatorText("PBR Material");
+    ImGui::ColorEdit3("Albedo Tint", &materialAlbedo.x);
+    ImGui::SliderFloat("Metallic Multiplier", &materialMetallic, 0.0f, 1.0f);
+    ImGui::SliderFloat("Roughness Multiplier", &materialRoughness, 0.04f, 1.0f);
+    ImGui::SliderFloat("AO Multiplier", &materialAo, 0.0f, 1.0f);
 
     ImDrawList *drawList = ImGui::GetForegroundDrawList();
     ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -311,12 +426,117 @@ void TriangleApplication::drawImGui()
     drawAxisLine(drawList, origin, viewRotation, glm::vec3(0.0f, 1.0f, 0.0f), IM_COL32(80, 210, 90, 255), "Y");
     drawAxisLine(drawList, origin, viewRotation, glm::vec3(0.0f, 0.0f, 1.0f), IM_COL32(80, 140, 255, 255), "Z");
 
+    drawLightOverlays();
     drawTransformGizmo();
+}
+
+void TriangleApplication::drawLightOverlays()
+{
+    if (pointLights.empty())
+    {
+        return;
+    }
+
+    ImDrawList *drawList = ImGui::GetForegroundDrawList();
+    ImGuiViewport *viewport = ImGui::GetMainViewport();
+    ImGuiIO &io = ImGui::GetIO();
+
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), swapChainExtent.width / static_cast<float>(swapChainExtent.height), cameraNear, cameraFar);
+    projection[1][1] *= -1;
+
+    const ImVec2 mouse = io.MousePos;
+    int hoveredLight = -1;
+    float bestDistance = 12.0f;
+
+    std::vector<ImVec2> lightScreens(pointLights.size());
+    std::vector<bool> lightVisible(pointLights.size(), false);
+
+    for (size_t i = 0; i < pointLights.size(); i++)
+    {
+        lightVisible[i] = worldToScreen(pointLights[i].position, view, projection, viewport, lightScreens[i]);
+        if (!lightVisible[i])
+        {
+            continue;
+        }
+
+        const float distance = length(mouse - lightScreens[i]);
+        if (!io.WantCaptureMouse && gizmoHoveredAxis == 0 && gizmoActiveAxis == 0 && distance < bestDistance)
+        {
+            bestDistance = distance;
+            hoveredLight = static_cast<int>(i);
+        }
+    }
+
+    if (hoveredLight >= 0)
+    {
+        ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            selectedObject = SceneSelection::PointLight;
+            selectedModel = false;
+            selectedSceneObjectIndex = -1;
+            selectedPointLightIndex = hoveredLight;
+            sceneClickConsumed = true;
+        }
+    }
+
+    for (size_t i = 0; i < pointLights.size(); i++)
+    {
+        if (!lightVisible[i])
+        {
+            continue;
+        }
+
+        const PointLight &light = pointLights[i];
+        const bool selected = selectedObject == SceneSelection::PointLight && selectedPointLightIndex == static_cast<int>(i);
+        const bool hovered = hoveredLight == static_cast<int>(i);
+        const ImVec2 screen = lightScreens[i];
+        const ImU32 color = IM_COL32(
+            static_cast<int>(std::clamp(light.color.r, 0.0f, 1.0f) * 255.0f),
+            static_cast<int>(std::clamp(light.color.g, 0.0f, 1.0f) * 255.0f),
+            static_cast<int>(std::clamp(light.color.b, 0.0f, 1.0f) * 255.0f),
+            light.enabled ? 255 : 110);
+
+        drawList->AddCircleFilled(screen, selected || hovered ? 7.0f : 5.0f, color, 18);
+        drawList->AddCircle(screen, selected ? 10.0f : 7.0f, IM_COL32(255, 255, 255, selected ? 240 : 120), 18, selected ? 2.0f : 1.0f);
+        drawList->AddText(screen + ImVec2(10.0f, -8.0f), IM_COL32(255, 255, 255, 180), "Light");
+    }
 }
 
 void TriangleApplication::drawTransformGizmo()
 {
-    if (!selectedModel)
+    glm::vec3 *selectedPosition = nullptr;
+    glm::vec3 originWorld(0.0f);
+    glm::vec3 axisDirections[3] = {
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+    };
+
+    if (selectedObject == SceneSelection::Model)
+    {
+        SceneObject *object = getSelectedSceneObject();
+        if (object == nullptr)
+        {
+            gizmoHoveredAxis = 0;
+            gizmoActiveAxis = 0;
+            return;
+        }
+
+        selectedPosition = &object->position;
+        glm::mat4 model = getObjectMatrix(*object);
+        originWorld = glm::vec3(model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        axisDirections[0] = glm::normalize(glm::vec3(model * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)));
+        axisDirections[1] = glm::normalize(glm::vec3(model * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)));
+        axisDirections[2] = glm::normalize(glm::vec3(model * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
+    }
+    else if (selectedObject == SceneSelection::PointLight && selectedPointLightIndex >= 0 && selectedPointLightIndex < static_cast<int>(pointLights.size()))
+    {
+        selectedPosition = &pointLights[selectedPointLightIndex].position;
+        originWorld = *selectedPosition;
+    }
+    else
     {
         gizmoHoveredAxis = 0;
         gizmoActiveAxis = 0;
@@ -330,14 +550,6 @@ void TriangleApplication::drawTransformGizmo()
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), swapChainExtent.width / static_cast<float>(swapChainExtent.height), cameraNear, cameraFar);
     projection[1][1] *= -1;
-
-    glm::mat4 model = getModelMatrix();
-    glm::vec3 originWorld = glm::vec3(model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    glm::vec3 axisDirections[3] = {
-        glm::normalize(glm::vec3(model * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f))),
-        glm::normalize(glm::vec3(model * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f))),
-        glm::normalize(glm::vec3(model * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f))),
-    };
 
     const float distanceToCamera = glm::length(cameraPos - originWorld);
     const float axisWorldLength = std::clamp(distanceToCamera * 0.18f, 0.3f, 3.0f);
@@ -406,7 +618,7 @@ void TriangleApplication::drawTransformGizmo()
         {
             gizmoActiveAxis = gizmoHoveredAxis;
             gizmoDragStartMouse = glm::vec2(mouse.x, mouse.y);
-            gizmoDragStartPosition = modelPosition;
+            gizmoDragStartPosition = *selectedPosition;
             gizmoDragAxis = axisDirections[axisIndex];
             gizmoDragPlaneNormal = planeNormal;
             gizmoDragStartHitPoint = hitPoint;
@@ -430,7 +642,7 @@ void TriangleApplication::drawTransformGizmo()
             if (intersectRayPlane(rayOrigin, rayDirection, gizmoDragStartHitPoint, gizmoDragPlaneNormal, hitPoint))
             {
                 const float worldDistance = glm::dot(hitPoint - gizmoDragStartHitPoint, gizmoDragAxis);
-                modelPosition = gizmoDragStartPosition + gizmoDragAxis * worldDistance;
+                *selectedPosition = gizmoDragStartPosition + gizmoDragAxis * worldDistance;
             }
         }
     }

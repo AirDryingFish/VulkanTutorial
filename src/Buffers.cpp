@@ -14,6 +14,12 @@
 
 glm::mat4 TriangleApplication::getModelMatrix() const
 {
+    const SceneObject *object = getSelectedSceneObject();
+    if (object != nullptr)
+    {
+        return getObjectMatrix(*object);
+    }
+
     glm::mat4 model = glm::translate(glm::mat4(1.0f), modelPosition);
 
     model = glm::rotate(model, glm::radians(modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -23,6 +29,35 @@ glm::mat4 TriangleApplication::getModelMatrix() const
 
     model = glm::scale(model, modelScale);
     return model;
+}
+
+glm::mat4 TriangleApplication::getObjectMatrix(const SceneObject &object) const
+{
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), object.position);
+    model = glm::rotate(model, glm::radians(object.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(object.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(object.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::rotate(model, glm::radians(object.autoRotation), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(model, object.scale);
+    return model;
+}
+
+TriangleApplication::SceneObject *TriangleApplication::getSelectedSceneObject()
+{
+    if (selectedSceneObjectIndex < 0 || selectedSceneObjectIndex >= static_cast<int>(sceneObjects.size()))
+    {
+        return nullptr;
+    }
+    return &sceneObjects[selectedSceneObjectIndex];
+}
+
+const TriangleApplication::SceneObject *TriangleApplication::getSelectedSceneObject() const
+{
+    if (selectedSceneObjectIndex < 0 || selectedSceneObjectIndex >= static_cast<int>(sceneObjects.size()))
+    {
+        return nullptr;
+    }
+    return &sceneObjects[selectedSceneObjectIndex];
 }
 
 AllocatedBuffer TriangleApplication::createBuffer(VkDeviceSize size,
@@ -69,6 +104,11 @@ void TriangleApplication::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkD
 
 void TriangleApplication::createIndexBuffer()
 {
+    if (indices.empty())
+    {
+        return;
+    }
+
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
     AllocatedBuffer stagingBuffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
@@ -78,9 +118,6 @@ void TriangleApplication::createIndexBuffer()
     vmaUnmapMemory(allocator, stagingBuffer.allocation);
 
     indexBuffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mainDeletionQueue.pushFunction([this, buffer = indexBuffer]() mutable {
-        destroyBuffer(buffer);
-    });
 
     copyBuffer(stagingBuffer.buffer, indexBuffer.buffer, bufferSize);
     destroyBuffer(stagingBuffer);
@@ -88,6 +125,11 @@ void TriangleApplication::createIndexBuffer()
 
 void TriangleApplication::createVertexBuffer()
 {
+    if (vertices.empty())
+    {
+        return;
+    }
+
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
     AllocatedBuffer stagingBuffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
@@ -97,12 +139,65 @@ void TriangleApplication::createVertexBuffer()
     vmaUnmapMemory(allocator, stagingBuffer.allocation);
 
     vertexBuffer = createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mainDeletionQueue.pushFunction([this, buffer = vertexBuffer]() mutable {
-        destroyBuffer(buffer);
-    });
 
     copyBuffer(stagingBuffer.buffer, vertexBuffer.buffer, bufferSize);
     destroyBuffer(stagingBuffer);
+}
+
+void TriangleApplication::createObjectBuffers(SceneObject &object, const MeshBuildData &meshData)
+{
+    if (meshData.vertices.empty() || meshData.indices.empty())
+    {
+        throw std::runtime_error("cannot create object buffers from empty mesh data!");
+    }
+
+    const VkDeviceSize vertexBufferSize = sizeof(meshData.vertices[0]) * meshData.vertices.size();
+    AllocatedBuffer vertexStagingBuffer = createBuffer(
+        vertexBufferSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    void *data = nullptr;
+    vmaMapMemory(allocator, vertexStagingBuffer.allocation, &data);
+    memcpy(data, meshData.vertices.data(), static_cast<size_t>(vertexBufferSize));
+    vmaUnmapMemory(allocator, vertexStagingBuffer.allocation);
+
+    object.vertexBuffer = createBuffer(
+        vertexBufferSize,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    copyBuffer(vertexStagingBuffer.buffer, object.vertexBuffer.buffer, vertexBufferSize);
+    destroyBuffer(vertexStagingBuffer);
+
+    const VkDeviceSize indexBufferSize = sizeof(meshData.indices[0]) * meshData.indices.size();
+    AllocatedBuffer indexStagingBuffer = createBuffer(
+        indexBufferSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    vmaMapMemory(allocator, indexStagingBuffer.allocation, &data);
+    memcpy(data, meshData.indices.data(), static_cast<size_t>(indexBufferSize));
+    vmaUnmapMemory(allocator, indexStagingBuffer.allocation);
+
+    object.indexBuffer = createBuffer(
+        indexBufferSize,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    copyBuffer(indexStagingBuffer.buffer, object.indexBuffer.buffer, indexBufferSize);
+    destroyBuffer(indexStagingBuffer);
+
+    object.vertexCount = static_cast<uint32_t>(meshData.vertices.size());
+    object.indexCount = static_cast<uint32_t>(meshData.indices.size());
+}
+
+void TriangleApplication::destroySceneObject(SceneObject &object)
+{
+    destroyBuffer(object.indexBuffer);
+    destroyBuffer(object.vertexBuffer);
+    object.vertexCount = 0;
+    object.indexCount = 0;
 }
 
 void TriangleApplication::createUniformBuffer()
@@ -124,22 +219,45 @@ void TriangleApplication::createUniformBuffer()
 
 void TriangleApplication::updateUniformBuffer(uint32_t currentImage, float deltaTime)
 {
-    if (rotateModel)
+    for (SceneObject &object : sceneObjects)
     {
-        modelAutoRotation += modelAutoRotateSpeed * deltaTime;
-        if (modelAutoRotation > 360.0f || modelAutoRotation < -360.0f)
+        if (!object.autoRotate)
         {
-            modelAutoRotation = std::fmod(modelAutoRotation, 360.0f);
+            continue;
+        }
+
+        object.autoRotation += object.autoRotateSpeed * deltaTime;
+        if (object.autoRotation > 360.0f || object.autoRotation < -360.0f)
+        {
+            object.autoRotation = std::fmod(object.autoRotation, 360.0f);
         }
     }
 
     UniformBufferObject ubo{};
-    ubo.model = getModelMatrix();
+    ubo.model = glm::mat4(1.0f);
     ubo.view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / static_cast<float>(swapChainExtent.height), cameraNear, cameraFar);
     ubo.proj[1][1] *= -1;
+    ubo.cameraPosition = glm::vec4(cameraPos, 1.0f);
+    ubo.ambientLight = glm::vec4(ambientLightColor, ambientLightIntensity);
+    ubo.lightCounts = glm::ivec4(static_cast<int>(std::min<size_t>(pointLights.size(), MAX_POINT_LIGHTS)), 0, 0, 0);
+    ubo.materialAlbedo = glm::vec4(materialAlbedo, 1.0f);
+    ubo.materialParams = glm::vec4(
+        materialMetallic,
+        materialRoughness,
+        materialAo,
+        0.0f
+    );
 
-    memcpy(uniformBufferMapped[currentFrame], &ubo, sizeof(ubo));
+    for (size_t i = 0; i < std::min<size_t>(pointLights.size(), MAX_POINT_LIGHTS); i++)
+    {
+        const PointLight &light = pointLights[i];
+        ubo.pointLights[i].position = glm::vec4(light.position, 1.0f);
+        ubo.pointLights[i].color = glm::vec4(light.color, light.intensity);
+        ubo.pointLights[i].params = glm::vec4(light.range, light.enabled ? 1.0f : 0.0f, 0.0f, 0.0f);
+    }
+
+    memcpy(uniformBufferMapped[currentImage], &ubo, sizeof(ubo));
 }
 
 void TriangleApplication::destroyBuffer(AllocatedBuffer &buffer)

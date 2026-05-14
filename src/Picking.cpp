@@ -95,7 +95,7 @@ void TriangleApplication::processModelPicking()
     const bool leftMousePressed = leftMouseDown && !leftMouseWasDown;
     leftMouseWasDown = leftMouseDown;
 
-    if (!leftMousePressed || !modelBoundsValid || ImGui::GetIO().WantCaptureMouse || gizmoHoveredAxis != 0 || gizmoActiveAxis != 0)
+    if (!leftMousePressed || sceneClickConsumed || sceneObjects.empty() || ImGui::GetIO().WantCaptureMouse || gizmoHoveredAxis != 0 || gizmoActiveAxis != 0)
     {
         return;
     }
@@ -128,11 +128,39 @@ void TriangleApplication::processModelPicking()
     const glm::vec3 rayOrigin = glm::vec3(nearPoint);
     const glm::vec3 rayDirection = glm::normalize(glm::vec3(farPoint - nearPoint));
 
-    glm::vec3 worldBoundsMin;
-    glm::vec3 worldBoundsMax;
-    transformAabb(getModelMatrix(), modelLocalBoundsMin, modelLocalBoundsMax, worldBoundsMin, worldBoundsMax);
+    int hitObjectIndex = -1;
+    float bestHitDistance = std::numeric_limits<float>::max();
+    for (size_t i = 0; i < sceneObjects.size(); i++)
+    {
+        const SceneObject &object = sceneObjects[i];
+        if (!object.boundsValid)
+        {
+            continue;
+        }
 
-    float hitDistance = 0.0f;
-    selectedModel = intersectRayAabb(rayOrigin, rayDirection, worldBoundsMin, worldBoundsMax, hitDistance);
-    modelPickDistance = selectedModel ? hitDistance : 0.0f;
+        glm::vec3 worldBoundsMin;
+        glm::vec3 worldBoundsMax;
+        transformAabb(getObjectMatrix(object), object.localBoundsMin, object.localBoundsMax, worldBoundsMin, worldBoundsMax);
+
+        float hitDistance = 0.0f;
+        if (intersectRayAabb(rayOrigin, rayDirection, worldBoundsMin, worldBoundsMax, hitDistance) && hitDistance < bestHitDistance)
+        {
+            bestHitDistance = hitDistance;
+            hitObjectIndex = static_cast<int>(i);
+        }
+    }
+
+    selectedModel = hitObjectIndex >= 0;
+    modelPickDistance = selectedModel ? bestHitDistance : 0.0f;
+    selectedSceneObjectIndex = hitObjectIndex;
+    if (selectedModel)
+    {
+        selectedObject = SceneSelection::Model;
+        selectedPointLightIndex = -1;
+    }
+    else
+    {
+        selectedObject = SceneSelection::None;
+        selectedPointLightIndex = -1;
+    }
 }

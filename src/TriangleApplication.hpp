@@ -4,6 +4,7 @@
 #include "DeletionQueue.hpp"
 #include "VulkanTypes.hpp"
 
+#include <array>
 #include <functional>
 #include <string>
 #include <vector>
@@ -22,6 +23,7 @@ private:
     void initImGui();
     void drawImGui();
     void drawTransformGizmo();
+    void drawLightOverlays();
 
     void CreateInstance();
     void setupDebugMessenger();
@@ -60,6 +62,49 @@ private:
     VkShaderModule createShaderModule(const std::vector<char> &code);
     void createDescriptorSetLayout();
     void createGraphicsPipeline();
+    enum class MeshSource
+    {
+        Obj,
+        Cube,
+        Sphere,
+    };
+
+    enum class SceneSelection
+    {
+        None,
+        Model,
+        PointLight,
+    };
+
+    struct MeshBuildData
+    {
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
+        glm::vec3 boundsMin = {0.0f, 0.0f, 0.0f};
+        glm::vec3 boundsMax = {0.0f, 0.0f, 0.0f};
+        bool boundsValid = false;
+    };
+
+    struct SceneObject
+    {
+        std::string name;
+        MeshSource source = MeshSource::Obj;
+        std::string sourcePath;
+        AllocatedBuffer vertexBuffer;
+        AllocatedBuffer indexBuffer;
+        uint32_t vertexCount = 0;
+        uint32_t indexCount = 0;
+        glm::vec3 localBoundsMin = {0.0f, 0.0f, 0.0f};
+        glm::vec3 localBoundsMax = {0.0f, 0.0f, 0.0f};
+        bool boundsValid = false;
+        glm::vec3 position = {0.0f, 0.0f, 0.0f};
+        glm::vec3 rotation = {0.0f, 0.0f, 0.0f};
+        glm::vec3 scale = {1.0f, 1.0f, 1.0f};
+        bool autoRotate = false;
+        float autoRotation = 0.0f;
+        float autoRotateSpeed = 90.0f;
+    };
+
     struct GraphicsPipelineConfig
     {
         std::string vertShaderPath;
@@ -89,6 +134,13 @@ private:
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
     void loadModel();
+    void rebuildMesh(MeshSource source);
+    MeshBuildData buildMeshData(MeshSource source, const std::string &path);
+    void addMeshObject(MeshSource source, const std::string &path = std::string());
+    void createObjectBuffers(SceneObject &object, const MeshBuildData &meshData);
+    void destroySceneObject(SceneObject &object);
+    SceneObject *getSelectedSceneObject();
+    const SceneObject *getSelectedSceneObject() const;
     void computeModelBounds();
     void createVertexBuffer();
     void createIndexBuffer();
@@ -97,14 +149,18 @@ private:
     void processCameraInput(float deltaTime);
     void processModelPicking();
     glm::mat4 getModelMatrix() const;
+    glm::mat4 getObjectMatrix(const SceneObject &object) const;
 
     void createDescriptorPool();
     void createDescriptorSets();
     void createTextureDescriptorSets(
-        VkImageView imageView,
-        VkSampler sampler,
+        const std::array<VkDescriptorImageInfo, 5> &imageInfos,
         std::vector<VkDescriptorSet> &targetDescriptorSets);
 
+    AllocatedImage createTextureImageFromFile(
+        const std::string &path,
+        VkFormat format,
+        const std::array<unsigned char, 4> &fallbackPixel);
     void createTextureImage();
     void createTextureImageView();
     void createTextureSampler();
@@ -189,10 +245,17 @@ private:
 
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
+    std::vector<SceneObject> sceneObjects;
+    int selectedSceneObjectIndex = -1;
+    char importModelPath[260] = "../models/viking_room.obj";
+    std::string sceneStatusMessage;
     glm::vec3 modelLocalBoundsMin = {0.0f, 0.0f, 0.0f};
     glm::vec3 modelLocalBoundsMax = {0.0f, 0.0f, 0.0f};
     bool modelBoundsValid = false;
     bool selectedModel = false;
+    bool sceneClickConsumed = false;
+    SceneSelection selectedObject = SceneSelection::None;
+    int selectedPointLightIndex = -1;
     bool leftMouseWasDown = false;
     float modelPickDistance = 0.0f;
     int gizmoHoveredAxis = 0;
@@ -214,6 +277,10 @@ private:
     uint32_t mipLevels;
 
     AllocatedImage textureImage;
+    AllocatedImage normalImage;
+    AllocatedImage metallicImage;
+    AllocatedImage roughnessImage;
+    AllocatedImage aoImage;
     VkSampler textureSampler = VK_NULL_HANDLE;
 
     AllocatedImage depthImage;
@@ -262,10 +329,20 @@ private:
     float modelAutoRotation = 0.0f;
     float modelAutoRotateSpeed = 90.0f;
     glm::vec4 clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+    std::vector<PointLight> pointLights;
+    glm::vec3 ambientLightColor = {1.0f, 1.0f, 1.0f};
+    float ambientLightIntensity = 0.0f;
+    MeshSource meshSource = MeshSource::Sphere;
 
     // skybox member
     AllocatedImage skyboxImage;
     VkSampler skyboxSampler = VK_NULL_HANDLE;
     VkPipeline skyboxPipeline = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> skyboxDescriptorSets;
+
+    // pbr params
+    glm::vec3 materialAlbedo = {1.0f, 1.0f, 1.0f};
+    float materialMetallic = 1.0f;
+    float materialRoughness = 1.0f;
+    float materialAo = 1.0f;
 };

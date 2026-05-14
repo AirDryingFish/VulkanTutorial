@@ -19,6 +19,8 @@
 
 #include <vma/vk_mem_alloc.h>
 
+inline constexpr uint32_t MAX_POINT_LIGHTS = 16;
+
 struct QueueFamilyIndices
 {
     std::optional<uint32_t> graphicsFamily;
@@ -42,6 +44,7 @@ struct Vertex
     glm::vec3 pos;
     glm::vec3 color;
     glm::vec2 texcoord;
+    glm::vec3 normal;
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -52,9 +55,9 @@ struct Vertex
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions()
+    static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions()
     {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+        std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
@@ -71,12 +74,17 @@ struct Vertex
         attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[2].offset = offsetof(Vertex, texcoord);
 
+        attributeDescriptions[3].binding = 0;
+        attributeDescriptions[3].location = 3;
+        attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[3].offset = offsetof(Vertex, normal);
+
         return attributeDescriptions;
     }
 
     bool operator==(const Vertex &other) const
     {
-        return pos == other.pos && color == other.color && texcoord == other.texcoord;
+        return pos == other.pos && color == other.color && texcoord == other.texcoord && normal == other.normal;
     }
 };
 
@@ -87,20 +95,46 @@ struct hash<Vertex>
 {
     size_t operator()(Vertex const &vertex) const
     {
-        return ((hash<glm::vec3>()(vertex.pos) ^
-                 (hash<glm::vec3>()(vertex.color) << 1)) >>
-                1) ^
-               (hash<glm::vec2>()(vertex.texcoord) << 1);
+        return (((hash<glm::vec3>()(vertex.pos) ^
+                  (hash<glm::vec3>()(vertex.color) << 1)) >>
+                 1) ^
+                (hash<glm::vec2>()(vertex.texcoord) << 1)) ^
+               (hash<glm::vec3>()(vertex.normal) << 1);
     }
 };
 }
+
+struct PointLight
+{
+    glm::vec3 position = {0.0f, 0.0f, 1.5f};
+    glm::vec3 color = {1.0f, 0.92f, 0.78f};
+    float intensity = 4.0f;
+    float range = 8.0f;
+    bool enabled = true;
+};
+
+struct GpuPointLight
+{
+    alignas(16) glm::vec4 position;
+    alignas(16) glm::vec4 color;
+    alignas(16) glm::vec4 params;
+};
 
 struct UniformBufferObject
 {
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
+    alignas(16) glm::vec4 cameraPosition;
+    alignas(16) glm::vec4 ambientLight;
+    alignas(16) glm::ivec4 lightCounts;
+
+    alignas(16) glm::vec4 materialAlbedo;
+    alignas(16) glm::vec4 materialParams;
+
+    GpuPointLight pointLights[MAX_POINT_LIGHTS];
 };
+
 
 // vma -- memory management related type
 struct AllocatedBuffer
@@ -114,4 +148,5 @@ struct AllocatedImage
     VkImage image = VK_NULL_HANDLE;
     VkImageView imageView = VK_NULL_HANDLE;
     VmaAllocation allocation = nullptr;
+    uint32_t mipLevels = 1;
 };

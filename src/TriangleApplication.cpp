@@ -67,10 +67,7 @@ void TriangleApplication::InitVulkan()
     createSkyboxImage();
     createSkyboxSampler();
 
-    loadModel();
-
-    createVertexBuffer();
-    createIndexBuffer();
+    addMeshObject(MeshSource::Sphere);
     createUniformBuffer();
 
     createDescriptorPool();
@@ -98,6 +95,13 @@ void TriangleApplication::Cleanup()
     rendererReady = false;
 
     cleanupSwapChain();
+    for (SceneObject &object : sceneObjects)
+    {
+        destroySceneObject(object);
+    }
+    sceneObjects.clear();
+    destroyBuffer(indexBuffer);
+    destroyBuffer(vertexBuffer);
     mainDeletionQueue.flush();
     vmaDestroyAllocator(allocator);
     vkDestroyDevice(device, nullptr);

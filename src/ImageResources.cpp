@@ -49,22 +49,32 @@ AllocatedImage TriangleApplication::createImage(uint32_t width, uint32_t height,
     {
         throw std::runtime_error("failed to create image!");
     }
+    allocatedImage.mipLevels = mipLevels;
 
     return allocatedImage;
 }
 
-void TriangleApplication::createTextureImage()
+AllocatedImage TriangleApplication::createTextureImageFromFile(
+    const std::string &path,
+    VkFormat format,
+    const std::array<unsigned char, 4> &fallbackPixel)
 {
-    int texWidth, texHeight, texChannels;
-    stbi_uc *pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    VkDeviceSize imageSize = texWidth * texHeight * 4;
+    int texWidth = 0;
+    int texHeight = 0;
+    int texChannels = 0;
+    stbi_uc *pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
-    mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-
+    std::vector<unsigned char> fallbackPixels;
     if (!pixels)
     {
-        throw std::runtime_error("failed to load texture image!");
+        texWidth = 1;
+        texHeight = 1;
+        fallbackPixels.assign(fallbackPixel.begin(), fallbackPixel.end());
+        pixels = fallbackPixels.data();
     }
+
+    const VkDeviceSize imageSize = static_cast<VkDeviceSize>(texWidth) * static_cast<VkDeviceSize>(texHeight) * 4;
+    const uint32_t imageMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
     AllocatedBuffer stagingBuffer = createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
@@ -73,16 +83,37 @@ void TriangleApplication::createTextureImage()
     memcpy(data, pixels, static_cast<size_t>(imageSize));
     vmaUnmapMemory(allocator, stagingBuffer.allocation);
 
-    stbi_image_free(pixels);
+    if (fallbackPixels.empty())
+    {
+        stbi_image_free(pixels);
+    }
 
-    textureImage = createImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
-                               VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    AllocatedImage image = createImage(
+        static_cast<uint32_t>(texWidth),
+        static_cast<uint32_t>(texHeight),
+        imageMipLevels,
+        VK_SAMPLE_COUNT_1_BIT,
+        format,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    transitionImageLayout(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
-    copyBufferToImage(stagingBuffer.buffer, textureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-    generateMipmaps(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);
+    transitionImageLayout(image.image, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, imageMipLevels);
+    copyBufferToImage(stagingBuffer.buffer, image.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+    generateMipmaps(image.image, format, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), imageMipLevels);
 
     destroyBuffer(stagingBuffer);
+    return image;
+}
+
+void TriangleApplication::createTextureImage()
+{
+    textureImage = createTextureImageFromFile(PBR_ALBEDO_PATH, VK_FORMAT_R8G8B8A8_SRGB, {255, 255, 255, 255});
+    normalImage = createTextureImageFromFile(PBR_NORMAL_PATH, VK_FORMAT_R8G8B8A8_UNORM, {128, 128, 255, 255});
+    metallicImage = createTextureImageFromFile(PBR_METALLIC_PATH, VK_FORMAT_R8G8B8A8_UNORM, {0, 0, 0, 255});
+    roughnessImage = createTextureImageFromFile(PBR_ROUGHNESS_PATH, VK_FORMAT_R8G8B8A8_UNORM, {128, 128, 128, 255});
+    aoImage = createTextureImageFromFile(PBR_AO_PATH, VK_FORMAT_R8G8B8A8_UNORM, {255, 255, 255, 255});
+    mipLevels = textureImage.mipLevels;
 }
 
 void TriangleApplication::generateMipmaps(VkImage image, VkFormat imageFormat, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels)
@@ -215,8 +246,21 @@ VkImageView TriangleApplication::createImageView(VkImage image, VkFormat format,
 
 void TriangleApplication::createTextureImageView()
 {
-    textureImage.imageView = createImageView(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
+    textureImage.imageView = createImageView(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, textureImage.mipLevels);
+    normalImage.imageView = createImageView(normalImage.image, VK_FORMAT_R8G8B8A8_UNORM, normalImage.mipLevels);
+    metallicImage.imageView = createImageView(metallicImage.image, VK_FORMAT_R8G8B8A8_UNORM, metallicImage.mipLevels);
+    roughnessImage.imageView = createImageView(roughnessImage.image, VK_FORMAT_R8G8B8A8_UNORM, roughnessImage.mipLevels);
+    aoImage.imageView = createImageView(aoImage.image, VK_FORMAT_R8G8B8A8_UNORM, aoImage.mipLevels);
+
     mainDeletionQueue.pushFunction([this, image = textureImage]() mutable
+                                   { destroyImage(image); });
+    mainDeletionQueue.pushFunction([this, image = normalImage]() mutable
+                                   { destroyImage(image); });
+    mainDeletionQueue.pushFunction([this, image = metallicImage]() mutable
+                                   { destroyImage(image); });
+    mainDeletionQueue.pushFunction([this, image = roughnessImage]() mutable
+                                   { destroyImage(image); });
+    mainDeletionQueue.pushFunction([this, image = aoImage]() mutable
                                    { destroyImage(image); });
 }
 
