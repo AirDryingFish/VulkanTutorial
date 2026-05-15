@@ -21,6 +21,7 @@ add_executable(vulkan
     src/DebugUtils.cpp
     src/Descriptors.cpp
     src/GraphicsPipeline.cpp
+    src/IBL.cpp
     src/ImageResources.cpp
     src/Model.cpp
     src/Picking.cpp

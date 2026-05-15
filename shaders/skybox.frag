@@ -7,5 +7,7 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    outColor = texture(skyboxSampler, fragTexCoord);
+    vec3 hdrColor = texture(skyboxSampler, fragTexCoord).rgb;
+    vec3 color = hdrColor / (hdrColor + vec3(1.0));
+    outColor = vec4(color, 1.0);
 }

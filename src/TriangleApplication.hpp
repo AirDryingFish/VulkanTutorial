@@ -154,7 +154,7 @@ private:
     void createDescriptorPool();
     void createDescriptorSets();
     void createTextureDescriptorSets(
-        const std::array<VkDescriptorImageInfo, 5> &imageInfos,
+        const std::array<VkDescriptorImageInfo, 7> &imageInfos,
         std::vector<VkDescriptorSet> &targetDescriptorSets);
 
     AllocatedImage createTextureImageFromFile(
@@ -169,6 +169,9 @@ private:
     void createSkyboxSampler();
     void createSkyboxPipeline();
     void createSkyboxDescriptorSets();
+
+    void createIrradianceResources();
+    void renderIrradianceCubemap();
 
     AllocatedImage createImage(
         uint32_t width,
@@ -332,6 +335,7 @@ private:
     std::vector<PointLight> pointLights;
     glm::vec3 ambientLightColor = {1.0f, 1.0f, 1.0f};
     float ambientLightIntensity = 0.0f;
+    float iblIntensity = 1.0f;
     MeshSource meshSource = MeshSource::Sphere;
 
     // skybox member
@@ -339,6 +343,18 @@ private:
     VkSampler skyboxSampler = VK_NULL_HANDLE;
     VkPipeline skyboxPipeline = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> skyboxDescriptorSets;
+
+    // diffuse IBL irradiance cubemap
+    AllocatedImage irradianceImage;
+    VkSampler irradianceSampler = VK_NULL_HANDLE;
+    VkRenderPass irradianceRenderPass = VK_NULL_HANDLE;
+    VkDescriptorSetLayout irradianceDescriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool irradianceDescriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSet irradianceDescriptorSet = VK_NULL_HANDLE;
+    VkPipelineLayout irradiancePipelineLayout = VK_NULL_HANDLE;
+    VkPipeline irradiancePipeline = VK_NULL_HANDLE;
+    std::array<VkImageView, 6> irradianceFaceImageViews{};
+    std::array<VkFramebuffer, 6> irradianceFramebuffers{};
 
     // pbr params
     glm::vec3 materialAlbedo = {1.0f, 1.0f, 1.0f};

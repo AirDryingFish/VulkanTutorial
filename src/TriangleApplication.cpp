@@ -66,6 +66,7 @@ void TriangleApplication::InitVulkan()
     createTextureSampler();
     createSkyboxImage();
     createSkyboxSampler();
+    createIrradianceResources();
 
     addMeshObject(MeshSource::Sphere);
     createUniformBuffer();

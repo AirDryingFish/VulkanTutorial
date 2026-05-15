@@ -246,7 +246,7 @@ void TriangleApplication::updateUniformBuffer(uint32_t currentImage, float delta
         materialMetallic,
         materialRoughness,
         materialAo,
-        0.0f
+        iblIntensity
     );
 
     for (size_t i = 0; i < std::min<size_t>(pointLights.size(), MAX_POINT_LIGHTS); i++)

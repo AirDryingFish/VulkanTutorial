@@ -36,6 +36,8 @@ layout(binding = 2) uniform sampler2D normalMap;
 layout(binding = 3) uniform sampler2D metallicMap;
 layout(binding = 4) uniform sampler2D roughnessMap;
 layout(binding = 5) uniform sampler2D aoMap;
+layout(binding = 6) uniform samplerCube environmentMap;
+layout(binding = 7) uniform samplerCube irradianceMap;
 
 vec3 getNormalFromNormalMap()
 {
@@ -64,6 +66,21 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1 - F0) * pow(clamp(1 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 environmentDirection(vec3 worldDirection)
+{
+    return vec3(worldDirection.x, worldDirection.z, worldDirection.y);
+}
+
+vec3 sampleEnvironment(vec3 worldDirection)
+{
+    return texture(environmentMap, environmentDirection(normalize(worldDirection))).rgb;
+}
+
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness * roughness;
@@ -82,7 +99,7 @@ float GeometrySchlickGGX(float NdotV, float roughness)
     float k = (r * r) / 8.0;
 
     float num = NdotV;
-    float denom = NdotV * (1.0 * k) + k;
+    float denom = NdotV * (1.0 - k) + k;
     
     return num / denom;
 }
@@ -106,6 +123,9 @@ void main()
     vec3 albedo = fragColor * texture(albedoMap, fragTexCoord).rgb * ubo.materialAlbedo.rgb;
     vec3 normal = getNormalFromNormalMap();
     vec3 viewDir = normalize(ubo.cameraPosition.xyz - fragWorldPos);
+    float iblIntensity = max(ubo.materialParams.w, 0.0);
+    vec3 F0 = vec3(0.04);
+    F0 = mix(F0, albedo, metallic);
 
     vec3 Lo = vec3(0.0);
     for (int i = 0; i < ubo.lightCounts.x; i++)
@@ -126,8 +146,6 @@ void main()
         vec3 radiance = light.color.rgb * light.color.a * attenuation;
         vec3 halfDir = normalize(lightDir + viewDir);
 
-        vec3 F0 = vec3(0.04);
-        F0 = mix(F0, albedo, metallic);
         vec3 F = fresnelSchlick(max(dot(halfDir, viewDir), 0.0), F0);
 
         float NDF = DistributionGGX(normal, halfDir, roughness);
@@ -146,7 +164,21 @@ void main()
     }
 
     vec3 ambient = ubo.ambientLight.rgb * ubo.ambientLight.a * albedo * ao;
-    vec3 color = ambient + Lo;
+    vec3 F = fresnelSchlickRoughness(max(dot(normal, viewDir), 0.0), F0, roughness);
+    vec3 kS = F;
+    vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
+
+    vec3 irradiance = texture(irradianceMap, environmentDirection(normal)).rgb;
+    vec3 diffuse = irradiance * albedo;
+
+    vec3 reflectionDir = reflect(-viewDir, normal);
+    vec3 reflection = sampleEnvironment(reflectionDir);
+    float specularRoughness = mix(1.0, 0.2, roughness);
+    vec3 specular = reflection * F * specularRoughness;
+
+    vec3 ibl = (kD * diffuse + specular) * ao * iblIntensity;
+    vec3 color = ambient + ibl + Lo;
+    color = color / (color + vec3(1.0));
 
     outColor = vec4(color, 1.0);
 }

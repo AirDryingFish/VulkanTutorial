@@ -341,6 +341,7 @@ void TriangleApplication::drawImGui()
     ImGui::SeparatorText("Lights");
     ImGui::ColorEdit3("Ambient Color", &ambientLightColor.x);
     ImGui::DragFloat("Ambient Intensity", &ambientLightIntensity, 0.01f, 0.0f, 2.0f);
+    ImGui::DragFloat("IBL Intensity", &iblIntensity, 0.01f, 0.0f, 5.0f);
 
     const bool canAddLight = pointLights.size() < MAX_POINT_LIGHTS;
     if (!canAddLight)

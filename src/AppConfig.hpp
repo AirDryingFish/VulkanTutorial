@@ -16,6 +16,7 @@ inline const std::string PBR_NORMAL_PATH = "../textures/pbr/rustediron2_normal.p
 inline const std::string PBR_METALLIC_PATH = "../textures/pbr/rustediron2_metallic.png";
 inline const std::string PBR_ROUGHNESS_PATH = "../textures/pbr/rustediron2_roughness.png";
 inline const std::string PBR_AO_PATH = "../textures/pbr/rustediron2_ao.png";
+inline const std::string SKYBOX_HDR_PATH = "../textures/pbr/newport_loft.hdr";
 
 inline constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
