@@ -154,7 +154,7 @@ private:
     void createDescriptorPool();
     void createDescriptorSets();
     void createTextureDescriptorSets(
-        const std::array<VkDescriptorImageInfo, 7> &imageInfos,
+        const std::array<VkDescriptorImageInfo, 8> &imageInfos,
         std::vector<VkDescriptorSet> &targetDescriptorSets);
 
     AllocatedImage createTextureImageFromFile(
@@ -172,6 +172,8 @@ private:
 
     void createIrradianceResources();
     void renderIrradianceCubemap();
+    void createPrefilterResources();
+    void renderPrefilterCubemap();
 
     AllocatedImage createImage(
         uint32_t width,
@@ -355,6 +357,20 @@ private:
     VkPipeline irradiancePipeline = VK_NULL_HANDLE;
     std::array<VkImageView, 6> irradianceFaceImageViews{};
     std::array<VkFramebuffer, 6> irradianceFramebuffers{};
+
+    // prefilter cubemap
+    AllocatedImage prefilterImage;
+    VkSampler prefilterSampler = VK_NULL_HANDLE;
+    VkRenderPass prefilterRenderpass = VK_NULL_HANDLE;
+    VkPipeline prefilterPipeline = VK_NULL_HANDLE;
+    VkPipelineLayout prefilterPipelineLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout prefilterDescriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool prefilterDescriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSet prefilterDescriptorSet = VK_NULL_HANDLE;
+
+    static constexpr uint32_t prefilterMipLevels = 5;
+    std::array<std::array<VkImageView, 6>, prefilterMipLevels> prefilterFaceImageViews{};
+    std::array<std::array<VkFramebuffer, 6>, prefilterMipLevels> prefilterFramebuffers;
 
     // pbr params
     glm::vec3 materialAlbedo = {1.0f, 1.0f, 1.0f};

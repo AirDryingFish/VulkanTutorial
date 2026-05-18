@@ -14,7 +14,18 @@
 #include <stdexcept>
 #include <unordered_map>
 
-AllocatedImage TriangleApplication::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, uint32_t arrayLayers, VkImageCreateFlags flags)
+AllocatedImage TriangleApplication::createImage(
+    uint32_t width, 
+    uint32_t height, 
+    uint32_t mipLevels, 
+    VkSampleCountFlagBits numSamples, 
+    VkFormat format, 
+    VkImageTiling tiling, 
+    VkImageUsageFlags usage, 
+    VkMemoryPropertyFlags properties, 
+    uint32_t arrayLayers, 
+    VkImageCreateFlags flags
+)
 {
     AllocatedImage allocatedImage{};
 

@@ -5,7 +5,7 @@
 
 namespace
 {
-constexpr uint32_t textureDescriptorCount = 7;
+constexpr uint32_t textureDescriptorCount = 8;
 constexpr uint32_t descriptorSetGroupCount = 2; // model + skybox
 }
 
@@ -34,7 +34,7 @@ void TriangleApplication::createDescriptorPool()
 }
 
 void TriangleApplication::createTextureDescriptorSets(
-    const std::array<VkDescriptorImageInfo, 7> &imageInfos,
+    const std::array<VkDescriptorImageInfo, 8> &imageInfos,
     std::vector<VkDescriptorSet> &targetDescriptorSets)
 {
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
@@ -58,7 +58,7 @@ void TriangleApplication::createTextureDescriptorSets(
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(UniformBufferObject);
 
-        std::array<VkWriteDescriptorSet, 8> descriptorWrites{};
+        std::array<VkWriteDescriptorSet, 9> descriptorWrites{};
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[0].dstSet = targetDescriptorSets[i];
         descriptorWrites[0].dstBinding = 0;
@@ -84,7 +84,7 @@ void TriangleApplication::createTextureDescriptorSets(
 
 void TriangleApplication::createDescriptorSets()
 {
-    std::array<VkDescriptorImageInfo, 7> imageInfos{};
+    std::array<VkDescriptorImageInfo, 8> imageInfos{};
     imageInfos[0] = {textureSampler, textureImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
     imageInfos[1] = {textureSampler, normalImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
     imageInfos[2] = {textureSampler, metallicImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
@@ -92,13 +92,14 @@ void TriangleApplication::createDescriptorSets()
     imageInfos[4] = {textureSampler, aoImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
     imageInfos[5] = {skyboxSampler, skyboxImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
     imageInfos[6] = {irradianceSampler, irradianceImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+    imageInfos[7] = {prefilterSampler, prefilterImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
 
     createTextureDescriptorSets(imageInfos, descriptorSets);
 }
 
 void TriangleApplication::createSkyboxDescriptorSets()
 {
-    std::array<VkDescriptorImageInfo, 7> imageInfos{};
+    std::array<VkDescriptorImageInfo, 8> imageInfos{};
     imageInfos[0] = {skyboxSampler, skyboxImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
     imageInfos[1] = {textureSampler, normalImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
     imageInfos[2] = {textureSampler, metallicImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
@@ -106,6 +107,7 @@ void TriangleApplication::createSkyboxDescriptorSets()
     imageInfos[4] = {textureSampler, aoImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
     imageInfos[5] = {skyboxSampler, skyboxImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
     imageInfos[6] = {irradianceSampler, irradianceImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+    imageInfos[7] = {prefilterSampler, prefilterImage.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
 
     createTextureDescriptorSets(imageInfos, skyboxDescriptorSets);
 }

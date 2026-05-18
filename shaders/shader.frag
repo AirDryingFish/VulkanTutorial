@@ -38,6 +38,7 @@ layout(binding = 4) uniform sampler2D roughnessMap;
 layout(binding = 5) uniform sampler2D aoMap;
 layout(binding = 6) uniform samplerCube environmentMap;
 layout(binding = 7) uniform samplerCube irradianceMap;
+layout(binding = 8) uniform samplerCube prefilterMap;
 
 vec3 getNormalFromNormalMap()
 {

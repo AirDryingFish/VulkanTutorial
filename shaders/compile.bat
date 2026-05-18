@@ -4,4 +4,6 @@ C:/VulkanSDK/1.4.341.1/Bin/glslc.exe skybox.vert -o skybox.vert.spv
 C:/VulkanSDK/1.4.341.1/Bin/glslc.exe skybox.frag -o skybox.frag.spv
 C:/VulkanSDK/1.4.341.1/Bin/glslc.exe irradiance.vert -o irradiance.vert.spv
 C:/VulkanSDK/1.4.341.1/Bin/glslc.exe irradiance.frag -o irradiance.frag.spv
+C:/VulkanSDK/1.4.341.1/Bin/glslc.exe prefilter.vert -o prefilter.vert.spv
+C:/VulkanSDK/1.4.341.1/Bin/glslc.exe prefilter.frag -o prefilter.frag.spv
 pause
