@@ -277,12 +277,13 @@ SkyboxPixels loadLdrFaceSkybox()
 
 void TriangleApplication::createSkyboxImage()
 {
+    
     SkyboxPixels pixels = loadHdrSkybox(SKYBOX_HDR_PATH);
     if (pixels.empty())
     {
         pixels = loadLdrFaceSkybox();
     }
-
+    const uint32_t skyboxMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(pixels.width, pixels.height)))) + 1;
     AllocatedBuffer stagingBuffer = createBuffer(
         pixels.imageSize(),
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -296,11 +297,11 @@ void TriangleApplication::createSkyboxImage()
     skyboxImage = createImage(
         pixels.width,
         pixels.height,
-        1,
+        skyboxMipLevels,
         VK_SAMPLE_COUNT_1_BIT,
         skyboxFormat,
         VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         6,
         VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT);
@@ -310,7 +311,7 @@ void TriangleApplication::createSkyboxImage()
         skyboxFormat,
         VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        1,
+        skyboxMipLevels,
         6);
 
     immediateSubmit([&](VkCommandBuffer commandBuffer) {
@@ -337,18 +338,26 @@ void TriangleApplication::createSkyboxImage()
             regions.data());
     });
 
-    transitionImageLayout(
+    // transitionImageLayout(
+    //     skyboxImage.image,
+    //     skyboxFormat,
+    //     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+    //     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+    //     skyboxMipLevels,
+    //     6);
+    generateMipmaps(
         skyboxImage.image,
         skyboxFormat,
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-        1,
-        6);
+        pixels.width,
+        pixels.height,
+        skyboxMipLevels, 
+        6
+    );
 
     skyboxImage.imageView = createImageView(
         skyboxImage.image,
         skyboxFormat,
-        1,
+        skyboxMipLevels,
         VK_IMAGE_ASPECT_COLOR_BIT,
         VK_IMAGE_VIEW_TYPE_CUBE,
         6);
@@ -382,7 +391,7 @@ void TriangleApplication::createSkyboxSampler()
     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     samplerInfo.mipLodBias = 0.0f;
     samplerInfo.minLod = 0.0f;
-    samplerInfo.maxLod = 0.0f;
+    samplerInfo.maxLod = static_cast<float>(skyboxImage.mipLevels - 1);
 
     if (vkCreateSampler(device, &samplerInfo, nullptr, &skyboxSampler) != VK_SUCCESS)
     {

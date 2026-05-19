@@ -2,6 +2,7 @@
 
 const float PI = 3.14159265359;
 const int MAX_POINT_LIGHTS = 16;
+const float MAX_REFLECTION_LOD = 4.0;
 
 struct PointLight
 {
@@ -173,9 +174,11 @@ void main()
     vec3 diffuse = irradiance * albedo;
 
     vec3 reflectionDir = reflect(-viewDir, normal);
-    vec3 reflection = sampleEnvironment(reflectionDir);
-    float specularRoughness = mix(1.0, 0.2, roughness);
-    vec3 specular = reflection * F * specularRoughness;
+
+    // vec3 reflection = sampleEnvironment(reflectionDir);
+    vec3 prefilteredColor = textureLod(prefilterMap, environmentDirection(reflectionDir), roughness * MAX_REFLECTION_LOD).rgb;
+    // float specularRoughness = mix(1.0, 0.2, roughness);
+    vec3 specular = prefilteredColor * F;
 
     vec3 ibl = (kD * diffuse + specular) * ao * iblIntensity;
     vec3 color = ambient + ibl + Lo;

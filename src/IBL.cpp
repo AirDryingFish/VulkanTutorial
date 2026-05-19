@@ -248,8 +248,6 @@ void TriangleApplication::createIrradianceResources()
     descriptorWrite.pImageInfo = &imageInfo;
     vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
 
-
-
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
@@ -387,7 +385,7 @@ void TriangleApplication::createIrradianceResources()
 void TriangleApplication::renderIrradianceCubemap()
 {
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    captureProjection[1][1] *= -1.0f;
+    // captureProjection[1][1] *= -1.0f;
 
     const std::array<glm::mat4, 6> captureViews = {
         glm::lookAt(glm::vec3(0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
@@ -489,7 +487,6 @@ void TriangleApplication::createPrefilterResources()
         }
     }
 
-
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -580,7 +577,6 @@ void TriangleApplication::createPrefilterResources()
         }
     }
 
-
     VkDescriptorSetLayoutBinding environmentMapBinding{};
     environmentMapBinding.binding = 0;
     environmentMapBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -644,7 +640,7 @@ void TriangleApplication::createPrefilterResources()
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(glm::mat4);
+    pushConstantRange.size = sizeof(PrefilterPushConstants);
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -778,7 +774,7 @@ void TriangleApplication::createPrefilterResources()
 void TriangleApplication::renderPrefilterCubemap()
 {
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    captureProjection[1][1] *= -1.0f;
+    // captureProjection[1][1] *= -1.0f;
 
     const std::array<glm::mat4, 6> captureViews = {
         glm::lookAt(glm::vec3(0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
@@ -790,70 +786,68 @@ void TriangleApplication::renderPrefilterCubemap()
     };
 
     immediateSubmit([&](VkCommandBuffer commandBuffer)
-    {
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        // viewport.width = static_cast<float>(prefilterDimension);
-        // viewport.height = static_cast<float>(prefilterDimension);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+                    {
+                        VkViewport viewport{};
+                        viewport.x = 0.0f;
+                        viewport.y = 0.0f;
+                        // viewport.width = static_cast<float>(prefilterDimension);
+                        // viewport.height = static_cast<float>(prefilterDimension);
+                        viewport.minDepth = 0.0f;
+                        viewport.maxDepth = 1.0f;
 
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        // scissor.extent = {prefilterDimension, prefilterDimension};
+                        VkRect2D scissor{};
+                        scissor.offset = {0, 0};
+                        // scissor.extent = {prefilterDimension, prefilterDimension};
 
-        VkClearValue clearValue{};
-        clearValue.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+                        VkClearValue clearValue{};
+                        clearValue.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
 
-        for (uint32_t mip = 0; mip < prefilterMipLevels; mip++)
-        {
-            uint32_t mipSize = prefilterDimension >> mip;
-            viewport.width = static_cast<float>(mipSize);
-            viewport.height = static_cast<float>(mipSize);
-            scissor.extent = {mipSize, mipSize};
+                        for (uint32_t mip = 0; mip < prefilterMipLevels; mip++)
+                        {
+                            uint32_t mipSize = prefilterDimension >> mip;
+                            viewport.width = static_cast<float>(mipSize);
+                            viewport.height = static_cast<float>(mipSize);
+                            scissor.extent = {mipSize, mipSize};
 
-            for (uint32_t face = 0; face < prefilterFramebuffers[mip].size(); face++)
-            {
-                VkRenderPassBeginInfo renderPassInfo{};
-                renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                renderPassInfo.renderPass = prefilterRenderpass;
-                renderPassInfo.framebuffer = prefilterFramebuffers[mip][face];
-                renderPassInfo.renderArea.offset = {0, 0};
-                renderPassInfo.renderArea.extent = {mipSize, mipSize};
-                renderPassInfo.clearValueCount = 1;
-                renderPassInfo.pClearValues = &clearValue;
+                            for (uint32_t face = 0; face < prefilterFramebuffers[mip].size(); face++)
+                            {
+                                VkRenderPassBeginInfo renderPassInfo{};
+                                renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                                renderPassInfo.renderPass = prefilterRenderpass;
+                                renderPassInfo.framebuffer = prefilterFramebuffers[mip][face];
+                                renderPassInfo.renderArea.offset = {0, 0};
+                                renderPassInfo.renderArea.extent = {mipSize, mipSize};
+                                renderPassInfo.clearValueCount = 1;
+                                renderPassInfo.pClearValues = &clearValue;
 
-                vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-                vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-                vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, prefilterPipeline);
-                vkCmdBindDescriptorSets(
-                    commandBuffer,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    prefilterPipelineLayout,
-                    0,
-                    1,
-                    &prefilterDescriptorSet,
-                    0,
-                    nullptr);
+                                vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+                                vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+                                vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+                                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, prefilterPipeline);
+                                vkCmdBindDescriptorSets(
+                                    commandBuffer,
+                                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    prefilterPipelineLayout,
+                                    0,
+                                    1,
+                                    &prefilterDescriptorSet,
+                                    0,
+                                    nullptr);
 
-                // const glm::mat4 viewProjection = captureProjection * captureViews[face];
-                PrefilterPushConstants pushConstants{};
-                pushConstants.viewProjection = captureProjection * captureViews[face];
-                pushConstants.roughness = static_cast<float>(mip) / static_cast<float>(prefilterMipLevels - 1);
-                vkCmdPushConstants(
-                    commandBuffer,
-                    prefilterPipelineLayout,
-                    VK_SHADER_STAGE_VERTEX_BIT,
-                    0,
-                    sizeof(PrefilterPushConstants),
-                    &pushConstants);
+                                // const glm::mat4 viewProjection = captureProjection * captureViews[face];
+                                PrefilterPushConstants pushConstants{};
+                                pushConstants.viewProjection = captureProjection * captureViews[face];
+                                pushConstants.roughness = static_cast<float>(mip) / static_cast<float>(prefilterMipLevels - 1);
+                                vkCmdPushConstants(
+                                    commandBuffer,
+                                    prefilterPipelineLayout,
+                                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                                    0,
+                                    sizeof(PrefilterPushConstants),
+                                    &pushConstants);
 
-                vkCmdDraw(commandBuffer, 36, 1, 0, 0);
-                vkCmdEndRenderPass(commandBuffer);
-            }
-        }
-
-    });
+                                vkCmdDraw(commandBuffer, 36, 1, 0, 0);
+                                vkCmdEndRenderPass(commandBuffer);
+                            }
+                        } });
 }

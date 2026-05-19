@@ -127,7 +127,7 @@ void TriangleApplication::createTextureImage()
     mipLevels = textureImage.mipLevels;
 }
 
-void TriangleApplication::generateMipmaps(VkImage image, VkFormat imageFormat, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels)
+void TriangleApplication::generateMipmaps(VkImage image, VkFormat imageFormat, uint32_t texWidth, uint32_t texHeight, uint32_t mipLevels, uint32_t layerCount)
 {
     VkFormatProperties formatProperties;
     vkGetPhysicalDeviceFormatProperties(physicalDevice, imageFormat, &formatProperties);
@@ -146,7 +146,7 @@ void TriangleApplication::generateMipmaps(VkImage image, VkFormat imageFormat, u
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
+        barrier.subresourceRange.layerCount = layerCount;
         barrier.subresourceRange.levelCount = 1;
 
         int32_t mipWidth = texWidth;
@@ -175,7 +175,7 @@ void TriangleApplication::generateMipmaps(VkImage image, VkFormat imageFormat, u
             blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             blit.srcSubresource.mipLevel = i - 1;
             blit.srcSubresource.baseArrayLayer = 0;
-            blit.srcSubresource.layerCount = 1;
+            blit.srcSubresource.layerCount = layerCount;
             blit.dstOffsets[0] = {0, 0, 0};
             blit.dstOffsets[1] = {
                 mipWidth > 1 ? mipWidth / 2 : 1,
@@ -184,7 +184,7 @@ void TriangleApplication::generateMipmaps(VkImage image, VkFormat imageFormat, u
             blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             blit.dstSubresource.mipLevel = i;
             blit.dstSubresource.baseArrayLayer = 0;
-            blit.dstSubresource.layerCount = 1;
+            blit.dstSubresource.layerCount = layerCount;
 
             vkCmdBlitImage(
                 commandBuffer,

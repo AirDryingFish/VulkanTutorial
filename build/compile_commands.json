@@ -13,6 +13,12 @@
 },
 {
   "directory": "E:/vulkan/build",
+  "command": "E:\\mingw64\\bin\\c++.exe -DGLFW_DLL -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem E:/vcpkg/installed/x64-windows/include/vma -g -std=gnu++17 -o CMakeFiles\\vulkan.dir\\src\\Camera.cpp.obj -c E:\\vulkan\\src\\Camera.cpp",
+  "file": "E:/vulkan/src/Camera.cpp",
+  "output": "E:/vulkan/build/CMakeFiles/vulkan.dir/src/Camera.cpp.obj"
+},
+{
+  "directory": "E:/vulkan/build",
   "command": "E:\\mingw64\\bin\\c++.exe -DGLFW_DLL -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem E:/vcpkg/installed/x64-windows/include/vma -g -std=gnu++17 -o CMakeFiles\\vulkan.dir\\src\\CommandBuffers.cpp.obj -c E:\\vulkan\\src\\CommandBuffers.cpp",
   "file": "E:/vulkan/src/CommandBuffers.cpp",
   "output": "E:/vulkan/build/CMakeFiles/vulkan.dir/src/CommandBuffers.cpp.obj"
@@ -37,6 +43,12 @@
 },
 {
   "directory": "E:/vulkan/build",
+  "command": "E:\\mingw64\\bin\\c++.exe -DGLFW_DLL -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem E:/vcpkg/installed/x64-windows/include/vma -g -std=gnu++17 -o CMakeFiles\\vulkan.dir\\src\\IBL.cpp.obj -c E:\\vulkan\\src\\IBL.cpp",
+  "file": "E:/vulkan/src/IBL.cpp",
+  "output": "E:/vulkan/build/CMakeFiles/vulkan.dir/src/IBL.cpp.obj"
+},
+{
+  "directory": "E:/vulkan/build",
   "command": "E:\\mingw64\\bin\\c++.exe -DGLFW_DLL -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem E:/vcpkg/installed/x64-windows/include/vma -g -std=gnu++17 -o CMakeFiles\\vulkan.dir\\src\\ImageResources.cpp.obj -c E:\\vulkan\\src\\ImageResources.cpp",
   "file": "E:/vulkan/src/ImageResources.cpp",
   "output": "E:/vulkan/build/CMakeFiles/vulkan.dir/src/ImageResources.cpp.obj"
@@ -46,6 +58,12 @@
   "command": "E:\\mingw64\\bin\\c++.exe -DGLFW_DLL -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem E:/vcpkg/installed/x64-windows/include/vma -g -std=gnu++17 -o CMakeFiles\\vulkan.dir\\src\\Model.cpp.obj -c E:\\vulkan\\src\\Model.cpp",
   "file": "E:/vulkan/src/Model.cpp",
   "output": "E:/vulkan/build/CMakeFiles/vulkan.dir/src/Model.cpp.obj"
+},
+{
+  "directory": "E:/vulkan/build",
+  "command": "E:\\mingw64\\bin\\c++.exe -DGLFW_DLL -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem E:/vcpkg/installed/x64-windows/include/vma -g -std=gnu++17 -o CMakeFiles\\vulkan.dir\\src\\Picking.cpp.obj -c E:\\vulkan\\src\\Picking.cpp",
+  "file": "E:/vulkan/src/Picking.cpp",
+  "output": "E:/vulkan/build/CMakeFiles/vulkan.dir/src/Picking.cpp.obj"
 },
 {
   "directory": "E:/vulkan/build",
@@ -94,5 +112,11 @@
   "command": "E:\\mingw64\\bin\\c++.exe -DGLFW_DLL -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem E:/vcpkg/installed/x64-windows/include/vma -g -std=gnu++17 -o CMakeFiles\\vulkan.dir\\src\\ImGuiLayer.cpp.obj -c E:\\vulkan\\src\\ImGuiLayer.cpp",
   "file": "E:/vulkan/src/ImGuiLayer.cpp",
   "output": "E:/vulkan/build/CMakeFiles/vulkan.dir/src/ImGuiLayer.cpp.obj"
+},
+{
+  "directory": "E:/vulkan/build",
+  "command": "E:\\mingw64\\bin\\c++.exe -DGLFW_DLL -IE:/vulkan/src -isystem E:/vcpkg/installed/x64-windows/include -isystem E:/vcpkg/installed/x64-windows/include/vma -g -std=gnu++17 -o CMakeFiles\\vulkan.dir\\src\\Skybox.cpp.obj -c E:\\vulkan\\src\\Skybox.cpp",
+  "file": "E:/vulkan/src/Skybox.cpp",
+  "output": "E:/vulkan/build/CMakeFiles/vulkan.dir/src/Skybox.cpp.obj"
 }
 ]

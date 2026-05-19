@@ -68,7 +68,7 @@ void TriangleApplication::InitVulkan()
     createSkyboxSampler();
     createIrradianceResources();
 
-    // createPrefilterResources();
+    createPrefilterResources();
 
     addMeshObject(MeshSource::Sphere);
     createUniformBuffer();
